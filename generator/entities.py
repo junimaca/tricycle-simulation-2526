@@ -6,8 +6,8 @@ from enum import Enum
 MS_PER_FRAME = 1000
 
 # PICKUP / DROPOFF PARAMETERS
-ENQUEUE_RADIUS_METERS = 200  # Radius within which tricycles can detect and enqueue passengers
-S_ENQUEUE_RADIUS_METERS = 50  # Smaller radius for enqueueing when tricycle is serving passengers
+ENQUEUE_RADIUS_METERS = 20  # Radius within which tricycles can detect and enqueue passengers
+S_ENQUEUE_RADIUS_METERS = 20  # Smaller radius for enqueueing when tricycle is serving passengers
 DROPOFF_RADIUS_METERS = 20  # Increased radius for actual dropoff
 PICKUP_RADIUS_METERS = 20  # Increased radius for actual pickup
 
@@ -759,6 +759,72 @@ class Tricycle(Actor):
         
         return None
 
+    def enqueueNearbyPsgrBetter(self, current_time: int):
+        if not self.map:
+            raise Exception("Not backward compatible. Please use a map")
+        
+        # If we already have an enqueued passenger, don't try to enqueue another one
+        if self.enqueuedPassenger is not None:
+            # print(f"Tricycle {self.id} already has enqueued passenger {self.enqueuedPassenger}", flush=True)
+            return None
+        
+        cur = self.path[-1]
+        
+        # Check capacity
+        remaining_capacity = self.capacity - len(self.passengers)
+        if remaining_capacity <= 0:
+            return None
+        
+        # Get nearby passengers using the new Map method
+        radius = self.s_enqueue_radius_meters if self.hasPassenger() else self.enqueue_radius_meters
+        nearby_passengers = self.map.getNearbyPassengers(cur, radius)
+        
+        # Sort passengers by distance
+        passenger_distances = []
+        for p in nearby_passengers:
+            if p.status == PassengerStatus.WAITING:
+                distance = util.haversine(*cur.toTuple(), *p.src.toTuple())
+                passenger_distances.append((distance, p))
+        
+        # Sort by distance
+        passenger_distances.sort(key=lambda x: x[0])
+        
+        # Only take the closest passenger
+        if passenger_distances:
+            distance, p = passenger_distances[0]
+
+            if is_en_route(cur, self.to_go[0], p.dest):
+                # Update passenger status to ENQUEUED and claim them
+                p.onEnqueue(self.id, current_time, [p.src.x, p.src.y])
+                self.enqueuedPassenger = p  # Track enqueued passenger
+                self.events.append({
+                    "type": "ENQUEUE",
+                    "data": p.id,
+                    "time": current_time,
+                    "location": [p.src.x, p.src.y]
+                })
+
+                # Set status to ENQUEUING
+                self.updateStatus(TricycleStatus.ENQUEUING)
+
+                # Add pickup point to the front of to_go if not already there
+                if not any(point.x == p.src.x and point.y == p.src.y for point in self.to_go):
+                    if not self.updatePath(p.src, priority='front'):
+                        # print(f"Failed to add pickup point for {p.id}", flush=True)
+                        # If we failed to add the pickup point, reset the passenger
+                        p.onReset(current_time, [p.src.x, p.src.y])
+                        self.enqueuedPassenger = None
+                        # Reset status based on roaming state
+                        if self.isRoaming:
+                            self.updateStatus(TricycleStatus.ROAMING)
+                        else:
+                            self.updateStatus(TricycleStatus.IDLE)
+                    else:
+                        # print(f"Enqueued passenger {p.id} at distance {distance:.2f}m", flush=True)
+                        return p
+        return None
+  
+    
     def loadPassenger(self, p: Passenger, current_time: int):
         """
         Attempts to load a passenger into the tricycle.
