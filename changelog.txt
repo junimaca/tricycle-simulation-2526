@@ -177,3 +177,28 @@ CHANGELOG
 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
 
 
+-------------------------------------------------------------------------------------------
+1/29/2026
+
+New functions:
+- util/__init__.py: is_en_route function - determines if point 3 is "en route" from point 1 to point 2
+- entities.py: enqueueNearbyPsgrBetter   - better enqueue method that utilizes is_en_route
+
+Visualization changes:
+
+event_processor.js
+- Line 49, 65-80: Create marker for passenger destination upon enqueue
+- Line 93-102: Manage marker for passenger destination
+- Line 171-194: Commented out because no need for terminals
+- Line 308-328: Commented out because no need for path handler (for now) (?)
+- Line 470-472: Added removal of destination lines
+- Line 522-530: Added removal of destination marker
+- Line 568-581: Create destination line between passenger and its destination
+
+managers.js
+- Line 115-126: Added more types of markers
+- Line 259-349: Destination line management
+- Line 814, 829-830: Added destination line color
+
+map.js
+- Line 166: processEvent now includes dest

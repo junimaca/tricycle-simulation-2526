@@ -112,14 +112,18 @@ export class StateManager {
 export class VisualManager {
     constructor() {
         this.markers = {
-            appear: new Map(),    // Store passenger appear markers
-            load: new Map(),      // Store load markers
-            dropoff: new Map(),   // Store dropoff markers
+            appear: new Map(),     // Store passenger appear markers
+            load: new Map(),       // Store load markers
+            dropoff: new Map(),    // Store dropoff markers
             enqueueLines: new Map(), // Store lines connecting trikes to enqueued passengers
-            event: new Map(),     // Store all event markers
-            roamPath: new Map(),   // Store roam paths for trikes
+            event: new Map(),      // Store all event markers
+            // roamPath: new Map(),   // Store roam paths for trikes
             trike: new Map(),      // Add trike markers map
-            terminal: new Map()    // Add terminal markers map
+            terminal: new Map(),   // Add terminal markers map
+
+            destination: new Map(),  // Add destination markers map
+            trikeLines: new Map(),   // Store lines connecting trikes to their destinations
+            destinationLines: new Map(),    // Store lines connecting enqueued passengers to their destinations
         };
     }
 
@@ -249,6 +253,98 @@ export class VisualManager {
                     this.removeEnqueueLine(passengerId);
                 }
             }
+        });
+    }
+
+    // Destination Line Management
+    removeDestinationLine(passengerId) {
+        const lineData = this.markers.destinationLines.get(passengerId);
+        if (lineData && lineData.line) {
+            console.log(`Removing destination line for passenger ${passengerId}`);
+            lineData.line.remove();
+            this.markers.destinationLines.delete(passengerId);
+        }
+    }
+
+    createDestinationLine(trikeId, passengerId, passengerPos, destinationPos) {
+        // Validate all inputs
+        if (!passengerId) {
+            console.error('Missing passengerId for destination line');
+            return;
+        }
+
+        if (!passengerPos || !destinationPos) {
+            console.error('Missing positions for destination line:', { passengerPos, destinationPos });
+            return;
+        }
+
+        if (!isValidCoordinates([passengerPos.lat, passengerPos.lng]) ||
+            !isValidCoordinates([destinationPos.lat, destinationPos.lng])) {
+            console.error(`Invalid coordinates for destination line:`, { passengerPos, destinationPos });
+            return;
+        }
+
+        // Check if passenger's appear marker exists
+        const passengerMarker = this.getMarker('appear', passengerId);
+        const destinationMarker = this.getMarker('destination', passengerId);
+
+        // Create and store the enqueue line
+        const line = L.polyline([passengerPos, destinationPos], {
+            color: 'purple',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '5, 10',
+            interactive: false
+        }).addTo(map);
+
+        this.markers.destinationLines.set(passengerId, {
+            trikeId: trikeId,
+            line: line,
+            lastUpdate: Date.now()
+        });
+    }
+
+    // Tricycle Line Management
+    removeTrikeLine(trikeId) {
+        const lineData = this.markers.trikeLines.get(trikeId);
+        if (lineData && lineData.line) {
+            console.log(`Removing trike line for trike ${trikeId}`);
+            lineData.line.remove();
+            this.markers.trikeLines.delete(trikeId);
+        }
+    }
+
+    createTrikeLine(trikeId, trikePos, destinationPos) {
+        // Validate all inputs
+        if (!trikeId) {
+            console.error('Missing trikeId for trike line');
+            return;
+        }
+
+        if (!trikePos || !destinationPos) {
+            console.error('Missing positions for trike line:', { trikePos, destinationPos });
+            return;
+        }
+
+        if (!isValidCoordinates([trikePos.lat, trikePos.lng]) ||
+            !isValidCoordinates([destinationPos.lat, destinationPos.lng])) {
+            console.error(`Invalid coordinates for trike line:`, { trikePos, destinationPos });
+            return;
+        }
+
+        // Create and store the enqueue line
+        const line = L.polyline([trikePos, destinationPos], {
+            color: 'blue',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '5, 10',
+            interactive: false
+        }).addTo(map);
+
+        this.markers.trikeLines.set(trikeId, {
+            trikeId: trikeId,
+            line: line,
+            lastUpdate: Date.now()
         });
     }
 
@@ -715,6 +811,7 @@ export class VisualManager {
         const isTrikeAppear = message.includes("APPEAR") && id.startsWith("trike");
         const isEnqueue = message.includes("ENQUEUE") && id.startsWith("passenger");
         const isReset = message.includes("RESET") && id.startsWith("passenger");
+        const isPassengerDestination = message.includes("DESTINATION") && id.startsWith("passenger");
 
         let markerColor;
         if (isPassengerAppear) {
@@ -729,6 +826,8 @@ export class VisualManager {
             markerColor = 'orange';
         } else if (isDropoff) {
             markerColor = 'green';
+        } else if (isPassengerDestination) {
+            markerColor = 'gray';
         } else {
             markerColor = 'gray';
         }

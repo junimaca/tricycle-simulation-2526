@@ -116,8 +116,12 @@ def is_en_route(p1, p2, p3):
 
     response = requests.get(f'{OSRM_URL}/route/v1/driving/{x1},{y1};{x2},{y2}')
     data = response.json()
+    if isinstance(data, str):
+        data = json.loads(data)
 
-    route = data['routes'][0]['geometry']['coordinates']
+    route_coords = data['routes'][0]['geometry']['coordinates']
+    route = LineString([tuple(coord) for coord in route_coords])
+    print(route)
     p = Point(x3, y3)
     
     if data['code'] == "NoRoute":

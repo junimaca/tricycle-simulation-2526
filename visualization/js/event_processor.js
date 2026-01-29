@@ -46,6 +46,7 @@ export class EventProcessor {
             // Initialize passengers
             passengers.forEach(passenger => {
                 console.log('Creating marker for passenger:', passenger.id, 'src:', passenger.src);
+                console.log('Passenger:', passenger);
                 
                 // Convert coordinates using utility function
                 const coords = pointsToRaw(passenger.src);
@@ -61,6 +62,21 @@ export class EventProcessor {
                     `[Frame ${event.time || 0}] ${passenger.id}: APPEAR`,
                     passenger.id
                 );
+
+                // PSGR DEST
+                const coords_d = pointsToRaw(passenger.dest);
+                if (!coords_d) {
+                    console.error('Failed to convert coordinates for passenger:', passenger.id);
+                    return;
+                }
+                
+                console.log('Converted coordinates:', coords_d);
+                const marker_d = this.visualManager.createEventMarker(
+                    coords_d[0],  // latitude
+                    coords_d[1],  // longitude
+                    `[Frame ${event.time || 0}] ${passenger.id}: DESTINATION`,
+                    passenger.id
+                );
                 
                 if (marker) {
                     console.log('Successfully created marker for passenger:', passenger.id);
@@ -71,6 +87,17 @@ export class EventProcessor {
                     this.stateManager.updatePassengerState(passenger.id, 'WAITING');
                 } else {
                     console.error('Failed to create marker for passenger:', passenger.id);
+                }
+
+                if (marker_d) {
+                    console.log('Successfully created marker for passenger destination:', passenger.id);
+                    // Add to visual manager
+                    this.visualManager.addMarker('destination', passenger.id, marker_d);
+
+                    // Update state
+                    this.stateManager.updatePassengerState(passenger.id, 'WAITING');
+                } else {
+                    console.error('Failed to create marker for passenger destination:', passenger.id);
                 }
             });
 
@@ -142,29 +169,29 @@ export class EventProcessor {
         });
 
         // Add terminal initialization handler
-        this.registerHandler('INITIALIZE_TERMINALS', (event) => {
-            event.data.forEach(terminal => {
-                const marker = L.marker(terminal.location, {
-                    icon: L.divIcon({
-                        className: 'terminal-marker',
-                        html: `<div style="
-                            width: 12px;
-                            height: 12px;
-                            border-radius: 50%;
-                            border: 4px solid #FFFFFF;
-                            background-color: transparent;
-                        "></div>`
-                    })
-                }).addTo(window.map);
+        // this.registerHandler('INITIALIZE_TERMINALS', (event) => {
+        //     event.data.forEach(terminal => {
+        //         const marker = L.marker(terminal.location, {
+        //             icon: L.divIcon({
+        //                 className: 'terminal-marker',
+        //                 html: `<div style="
+        //                     width: 12px;
+        //                     height: 12px;
+        //                     border-radius: 50%;
+        //                     border: 4px solid #FFFFFF;
+        //                     background-color: transparent;
+        //                 "></div>`
+        //             })
+        //         }).addTo(window.map);
 
-                marker.bindTooltip(
-                    `Terminal ${terminal.id}: ${terminal.remaining_passengers} passengers, ${terminal.remaining_tricycles} tricycles`,
-                    { permanent: false }
-                );
+        //         marker.bindTooltip(
+        //             `Terminal ${terminal.id}: ${terminal.remaining_passengers} passengers, ${terminal.remaining_tricycles} tricycles`,
+        //             { permanent: false }
+        //         );
 
-                this.visualManager.addMarker('terminal', `terminal_${terminal.id}`, marker);
-            });
-        });
+        //         this.visualManager.addMarker('terminal', `terminal_${terminal.id}`, marker);
+        //     });
+        // });
 
         // Add INIT_MARKER handler
         this.registerHandler('INIT_MARKER', (event) => {
@@ -279,26 +306,26 @@ export class EventProcessor {
         });
 
         // Combine path management handlers
-        this.registerHandler('MANAGE_PATH', (event) => {
-            const { type, trikeId, path } = event;
+        // this.registerHandler('MANAGE_PATH', (event) => {
+        //     const { type, trikeId, path } = event;
             
-            switch (type) {
-                case 'SET_ROAM':
-                    if (Array.isArray(path) && path.length >= 2) {
-                        this.visualManager.setRoamPath(trikeId, path);
-                    }
-                    break;
+        //     switch (type) {
+        //         case 'SET_ROAM':
+        //             if (Array.isArray(path) && path.length >= 2) {
+        //                 this.visualManager.setRoamPath(trikeId, path);
+        //             }
+        //             break;
                     
-                case 'REMOVE_ROAM':
-                    this.visualManager.removeRoamPath(trikeId);
-                    break;
+        //         case 'REMOVE_ROAM':
+        //             this.visualManager.removeRoamPath(trikeId);
+        //             break;
                     
-                case 'UPDATE_ENQUEUE':
-                    const trikePos = event.trikePos;
-                    this.visualManager.updateEnqueueLines(trikeId, trikePos);
-                    break;
-            }
-        });
+        //         case 'UPDATE_ENQUEUE':
+        //             const trikePos = event.trikePos;
+        //             this.visualManager.updateEnqueueLines(trikeId, trikePos);
+        //             break;
+        //     }
+        // });
 
         // Combine movement handlers
         this.registerHandler('PROCESS_MOVEMENT', (event) => {
@@ -440,8 +467,9 @@ export class EventProcessor {
                     this.visualManager.addMarker('load', event.data, newLoadMarker);
                 }
                 
-                // Remove enqueue line for this passenger
+                // Remove enqueue and destination lines for  passenger
                 this.visualManager.removeEnqueueLine(event.data);
+                this.visualManager.removeDestinationLine(event.data);
                 
                 // Update passenger state
                 marker.passengers.add(event.data);
@@ -490,6 +518,16 @@ export class EventProcessor {
                 } else {
                     console.log('No load marker found for passenger:', event.data);
                 }
+
+                // Remove the destination marker for this passenger
+                const DestinationMarker = this.visualManager.markers.destination.get(event.data);
+                if (DestinationMarker) {
+                    console.log('Removing destination marker for passenger:', event.data);
+                    DestinationMarker.remove();
+                    this.visualManager.markers.destination.delete(event.data);
+                } else {
+                    console.log('No destination marker found for passenger:', event.data);
+                }
                 
                 // Update passenger state
                 marker.passengers.delete(event.data);
@@ -526,6 +564,21 @@ export class EventProcessor {
                         console.log(`Enqueue line already exists for passenger ${event.data}`);
                     }
                 }
+
+                // Create destination line between passenger and its destination
+                const existingDestLine = this.visualManager.markers.destinationLines.get(event.data);
+                const destinationMarker = this.visualManager.getMarker('destination', event.data);
+                if (!existingDestLine) {
+                        console.log(`Creating destination line for passenger ${event.data}`);
+                        this.visualManager.createDestinationLine(
+                            marker.id,
+                            event.data,
+                            passengerMarker.getLatLng(),
+                            destinationMarker.getLatLng()
+                        );
+                    } else {
+                        console.log(`Destination line already exists for passenger ${event.data}`);
+                    }
                 
                 this.processEvent({
                     type: 'UPDATE_PASSENGER',

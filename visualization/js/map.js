@@ -163,6 +163,7 @@ export async function show_real(id, t, p) {
                     return {
                         id: p.id,
                         src: p.src,
+                        dest: p.dest,
                         createTime: p.createTime * TIMING_CONFIG.frameDuration,
                         deathTime: p.deathTime !== -1 ? p.deathTime * TIMING_CONFIG.frameDuration : Infinity,
                         events: p.events
