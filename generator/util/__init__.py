@@ -3,6 +3,7 @@ import random
 import requests
 import polyline
 from config import OSRM_URL
+from shapely.geometry import LineString, Point
 
 class NoRoute(Exception):
     pass
@@ -92,3 +93,37 @@ def haversine(lon1, lat1, lon2, lat2):
     distance = r * c
 
     return distance * 1000
+
+def is_en_route(p1, p2, p3):
+    # Is p3 in the route between p1 and p2?
+
+    """
+    Parameters:
+    p1 and p2 - (x ,y) sou
+
+    Return value:
+    path - [(x1, y1), (x2, y2), ..., (xn, yn)]
+    """
+    
+    x1, y1 = p1
+    x2, y2 = p2
+    x3, y3 = p3
+    
+    # First find the nearest points on the road network
+    x1, y1 = find_nearest_point_in_osrm_path(x1, y1)
+    x2, y2 = find_nearest_point_in_osrm_path(x2, y2)
+    x3, y3 = find_nearest_point_in_osrm_path(x3, y3)
+
+    response = requests.get(f'{OSRM_URL}/route/v1/driving/{x1},{y1};{x2},{y2}')
+    data = response.json()
+
+    route = data['routes'][0]['geometry']['coordinates']
+    p = Point(x3, y3)
+    
+    if data['code'] == "NoRoute":
+        raise NoRoute
+    else:
+        if route.distance(p) < 0.0001:
+            return True
+        else:
+            return False
