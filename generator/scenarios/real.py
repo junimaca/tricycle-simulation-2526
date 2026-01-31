@@ -237,7 +237,11 @@ class Simulator:
             config.TOP_LEFT_Y
         )
 
-        hotspots: list[entities.Point] = [gen_random_valid_point() for _ in range(self.hotspots)]
+        # Use fixed hotspot coordinates for roaming trike starts when provided; otherwise random
+        if self.useFixedHotspots and fixedHotspots:
+            hotspots = validFixedHotspots
+        else:
+            hotspots = [gen_random_valid_point() for _ in range(self.hotspots)]
 
         # Generate terminals
         terminals: list[entities.Terminal] = []

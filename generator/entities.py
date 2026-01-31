@@ -793,7 +793,20 @@ class Tricycle(Actor):
         if passenger_distances:
             distance, p = passenger_distances[0]
 
-            if len(self.to_go) == 0 or util.is_en_route(cur.toTuple(), self.to_go[0].toTuple(), p.dest.toTuple()):
+            # Empty tricycle: pick up any nearby passenger (replan route to pickup then destination).
+            # Has passengers: only enqueue if new passenger's destination is on the way to current next waypoint.
+            empty = len(self.passengers) == 0
+            dest_en_route = False
+            if len(self.to_go) > 0:
+                try:
+                    dest_en_route = util.is_en_route(
+                        cur.toTuple(), self.to_go[0].toTuple(), p.dest.toTuple()
+                    )
+                except util.NoRoute:
+                    pass
+            allow_enqueue = empty or dest_en_route
+
+            if allow_enqueue:
                 # Update passenger status to ENQUEUED and claim them
                 p.onEnqueue(self.id, current_time, [p.src.x, p.src.y])
                 self.enqueuedPassenger = p  # Track enqueued passenger

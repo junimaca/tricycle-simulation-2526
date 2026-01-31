@@ -202,3 +202,15 @@ managers.js
 
 map.js
 - Line 166: processEvent now includes dest
+
+2/1/2026
+
+"""
+Run the tricycle simulation. Spawn is controlled by Simulator arguments:
+
+- totalTrikes / totalPassengers / totalTerminals: counts
+- roadPassengerChance: 0 = all passengers at terminals, 1 = all on road (roaming trikes can pick them up)
+- roamingTrikeChance: 0 = all trikes at terminals, 1 = all trikes roaming
+- useFixedTerminals=True + fixedTerminals in run(): use specific (y,x) terminal locations
+- useFixedHotspots=True + fixedHotspots in run(): use specific destination points for passengers
+"""
