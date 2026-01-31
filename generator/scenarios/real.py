@@ -435,7 +435,7 @@ class Simulator:
                     continue
                 # Only roaming tricycles should look for passengers on the road
                 if trike.isRoaming or trike.status == TricycleStatus.SERVING:
-                    p = trike.enqueueNearbyPassenger(cur_time[0])
+                    p = trike.enqueueNearbyPsgrBetter(cur_time[0])
                     if p:
                         # print(f"----Detected passenger {p.id} for {trike.id}", flush=True)
                         pass

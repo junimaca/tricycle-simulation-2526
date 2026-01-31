@@ -1,5 +1,6 @@
 import math
 import random
+import json
 import requests
 import polyline
 from config import OSRM_URL
@@ -114,20 +115,29 @@ def is_en_route(p1, p2, p3):
     x2, y2 = find_nearest_point_in_osrm_path(x2, y2)
     x3, y3 = find_nearest_point_in_osrm_path(x3, y3)
 
-    response = requests.get(f'{OSRM_URL}/route/v1/driving/{x1},{y1};{x2},{y2}')
+    # Request GeoJSON geometry so we can reliably access ['coordinates'].
+    # Without this, OSRM commonly returns an encoded polyline string.
+    response = requests.get(
+        f'{OSRM_URL}/route/v1/driving/{x1},{y1};{x2},{y2}',
+        params={"overview": "full", "geometries": "geojson"},
+    )
     data = response.json()
     if isinstance(data, str):
         data = json.loads(data)
 
-    route_coords = data['routes'][0]['geometry']['coordinates']
+    if data.get('code') == "NoRoute":
+        raise NoRoute
+
+    geometry = data['routes'][0]['geometry']
+    # If OSRM ignored our geometries=geojson param (or a proxy/cached response changed it),
+    # geometry may still be an encoded polyline string.
+    if isinstance(geometry, str):
+        routes = polyline.decode(geometry)
+        # polyline.decode returns [(lat, lon), ...]; we use (lon, lat) as x,y
+        route_coords = [(lon, lat) for lat, lon in routes]
+    else:
+        route_coords = geometry['coordinates']
     route = LineString([tuple(coord) for coord in route_coords])
-    print(route)
     p = Point(x3, y3)
     
-    if data['code'] == "NoRoute":
-        raise NoRoute
-    else:
-        if route.distance(p) < 0.0001:
-            return True
-        else:
-            return False
+    return route.distance(p) < 0.0001

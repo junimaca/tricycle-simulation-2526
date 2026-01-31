@@ -793,7 +793,7 @@ class Tricycle(Actor):
         if passenger_distances:
             distance, p = passenger_distances[0]
 
-            if util.is_en_route(cur.toTuple(), self.to_go[0].toTuple(), p.dest.toTuple()):
+            if len(self.to_go) == 0 or util.is_en_route(cur.toTuple(), self.to_go[0].toTuple(), p.dest.toTuple()):
                 # Update passenger status to ENQUEUED and claim them
                 p.onEnqueue(self.id, current_time, [p.src.x, p.src.y])
                 self.enqueuedPassenger = p  # Track enqueued passenger
