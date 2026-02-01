@@ -806,6 +806,14 @@ class Tricycle(Actor):
                     pass
             allow_enqueue = empty or dest_en_route
 
+            #### CODE TO SHOW DECISION OF ALLOW_ENQUEUE ####
+            self.events.append({
+                "type": "DECIDE",
+                "data": dest_en_route,
+                "time": current_time,
+                "location": [p.src.x, p.src.y]
+            })
+
             if allow_enqueue:
                 # Update passenger status to ENQUEUED and claim them
                 p.onEnqueue(self.id, current_time, [p.src.x, p.src.y])

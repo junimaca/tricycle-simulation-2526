@@ -15,6 +15,8 @@ const REFRESH_TIME = 100; // Time between frames in milliseconds
 export class StateManager {
     constructor(visualManager) {
         this.visualManager = visualManager;
+        /** @type {Map<string, { id: string, src: *, dest: *, createTime: number, deathTime: number, events: * }>} */
+        this.passengers = new Map();
         this.passengerStates = {
             WAITING: new Set(),
             ENQUEUED: new Set(),
@@ -29,6 +31,15 @@ export class StateManager {
         };
 
         this.maxPathIndex = 0;
+    }
+
+    getPassenger(passengerId) {
+        return this.passengers.get(passengerId) ?? null;
+    }
+
+    setPassengers(passengerList) {
+        this.passengers.clear();
+        passengerList.forEach(p => this.passengers.set(p.id, p));
     }
 
     updatePassengerState(passengerId, newState) {
@@ -48,6 +59,7 @@ export class StateManager {
     }
 
     reset() {
+        this.passengers.clear();
         // Reset all states
         Object.keys(this.passengerStates).forEach(key => {
             this.passengerStates[key].clear();
@@ -827,7 +839,7 @@ export class VisualManager {
         } else if (isDropoff) {
             markerColor = 'green';
         } else if (isPassengerDestination) {
-            markerColor = 'gray';
+            markerColor = 'blue';
         } else {
             markerColor = 'gray';
         }

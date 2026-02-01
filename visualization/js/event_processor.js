@@ -42,7 +42,8 @@ export class EventProcessor {
         // Add initialization handlers
         this.registerHandler('INITIALIZE_SIMULATION', (event) => {
             const { passengers, trikes } = event.data;
-            
+            this.stateManager.setPassengers(passengers);
+
             // Initialize passengers
             passengers.forEach(passenger => {
                 console.log('Creating marker for passenger:', passenger.id, 'src:', passenger.src);
@@ -62,21 +63,6 @@ export class EventProcessor {
                     `[Frame ${event.time || 0}] ${passenger.id}: APPEAR`,
                     passenger.id
                 );
-
-                // PSGR DEST
-                const coords_d = pointsToRaw(passenger.dest);
-                if (!coords_d) {
-                    console.error('Failed to convert coordinates for passenger:', passenger.id);
-                    return;
-                }
-                
-                console.log('Converted coordinates:', coords_d);
-                const marker_d = this.visualManager.createEventMarker(
-                    coords_d[0],  // latitude
-                    coords_d[1],  // longitude
-                    `[Frame ${event.time || 0}] ${passenger.id}: DESTINATION`,
-                    passenger.id
-                );
                 
                 if (marker) {
                     console.log('Successfully created marker for passenger:', passenger.id);
@@ -87,17 +73,6 @@ export class EventProcessor {
                     this.stateManager.updatePassengerState(passenger.id, 'WAITING');
                 } else {
                     console.error('Failed to create marker for passenger:', passenger.id);
-                }
-
-                if (marker_d) {
-                    console.log('Successfully created marker for passenger destination:', passenger.id);
-                    // Add to visual manager
-                    this.visualManager.addMarker('destination', passenger.id, marker_d);
-
-                    // Update state
-                    this.stateManager.updatePassengerState(passenger.id, 'WAITING');
-                } else {
-                    console.error('Failed to create marker for passenger destination:', passenger.id);
                 }
             });
 
@@ -564,21 +539,55 @@ export class EventProcessor {
                         console.log(`Enqueue line already exists for passenger ${event.data}`);
                     }
                 }
+                // Create destination marker for this passenger
+                const existingDestMarker = this.visualManager.markers.destination.get(event.data);
+                const passenger = this.stateManager.getPassenger(event.data);
+                if (!passenger) {
+                    console.error('No passenger data for ENQUEUE:', event.data);
+                    break;
+                }
+                const coords_d = pointsToRaw(passenger.dest);
+                if (!coords_d) {
+                    console.error('Invalid dest for passenger:', passenger.id);
+                    break;
+                }
+                if (!existingDestMarker) {
+                    console.log(`Creating destination marker for passenger ${passenger.id}`);
+                    const destinationMarker = this.visualManager.createEventMarker(
+                        coords_d[0],  // latitude
+                        coords_d[1],  // longitude
+                        `[Frame ${event.time || 0}] ${passenger.id}: DESTINATION`,
+                        passenger.id
+                    );
+
+                    if (destinationMarker) {
+                        console.log('Successfully created marker for passenger destination:', passenger.id);
+                        // Add to visual manager
+                        this.visualManager.addMarker('destination', passenger.id, destinationMarker);
+    
+                        // Update state
+                        this.stateManager.updatePassengerState(passenger.id, 'WAITING');
+                    } else {
+                        console.error('Failed to create marker for passenger destination:', passenger.id);
+                    }
+                } else {
+                    console.log(`Destination marker already exists for passenger ${passenger.id}`);
+                }
 
                 // Create destination line between passenger and its destination
                 const existingDestLine = this.visualManager.markers.destinationLines.get(event.data);
-                const destinationMarker = this.visualManager.getMarker('destination', event.data);
-                if (!existingDestLine) {
-                        console.log(`Creating destination line for passenger ${event.data}`);
-                        this.visualManager.createDestinationLine(
-                            marker.id,
-                            event.data,
-                            passengerMarker.getLatLng(),
-                            destinationMarker.getLatLng()
-                        );
-                    } else {
-                        console.log(`Destination line already exists for passenger ${event.data}`);
-                    }
+                const destMarkerForLine = this.visualManager.getMarker('destination', event.data);
+                if (passengerMarker && destMarkerForLine && !existingDestLine) {
+                    console.log(`Creating destination line for passenger ${event.data}`);
+                    this.visualManager.createDestinationLine(
+                        marker.id,
+                        event.data,
+                        passengerMarker.getLatLng(),
+                        destMarkerForLine.getLatLng()
+                    );
+                } else if (existingDestLine) {
+                    console.log(`Destination line already exists for passenger ${event.data}`);
+                }
                 
                 this.processEvent({
                     type: 'UPDATE_PASSENGER',

@@ -214,3 +214,21 @@ Run the tricycle simulation. Spawn is controlled by Simulator arguments:
 - useFixedTerminals=True + fixedTerminals in run(): use specific (y,x) terminal locations
 - useFixedHotspots=True + fixedHotspots in run(): use specific destination points for passengers
 """
+
+Fixes by Cursor:
+
+1. managers.js – StateManager
+- Line 19 - Added a passengers Map to hold full passenger objects.
+- Line 36-44 Added getPassenger(passengerId) that returns the stored passenger or null, setPassengers(passengerList) to fill that map.
+- Line 62 - reset() now clears passengers as well.
+
+tldr: makes passenger management easier
+
+2. event_processor.js
+- Line 45 - In INITIALIZE_SIMULATION, call this.stateManager.setPassengers(passengers) so passenger data is stored when the simulation is initialized.
+- Line 542-590 - In the ENQUEUE destination-marker block:
+Use getPassenger(event.data) and guard when there is no passenger or no valid dest (log and break instead of throwing).
+Only use passenger.dest after confirming passenger and coords_d are valid.
+When creating the destination line, use a local variable destMarkerForLine and only call createDestinationLine when both passengerMarker and destMarkerForLine exist, so getLatLng() is never called on a missing marker
+
+So line 42 means: “For each passenger in the list, store that whole passenger object in this.passengers under its id, so we can look it up by id later (e.g. in ENQUEUE with getPassenger(event.data)).”
