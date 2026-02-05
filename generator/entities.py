@@ -806,7 +806,6 @@ class Tricycle(Actor):
                     pass
             allow_enqueue = empty or dest_en_route
 
-            #### CODE TO SHOW DECISION OF ALLOW_ENQUEUE ####
             self.events.append({
                 "type": "DECIDE",
                 "data": dest_en_route,
