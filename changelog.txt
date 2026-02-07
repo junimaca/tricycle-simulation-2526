@@ -222,3 +222,17 @@ Only use passenger.dest after confirming passenger and coords_d are valid.
 When creating the destination line, use a local variable destMarkerForLine and only call createDestinationLine when both passengerMarker and destMarkerForLine exist, so getLatLng() is never called on a missing marker
 
 So line 42 means: “For each passenger in the list, store that whole passenger object in this.passengers under its id, so we can look it up by id later (e.g. in ENQUEUE with getPassenger(event.data)).”
+
+2/7/2026
+
+1. util.py
+- Added the passenger_spawn_major_only() function 
+
+2. config.py
+- Removed the duplicate coordinates
+
+3. real.py
+- Changed passenger source to the passenger_spawn_major_only() function
+
+4. main.py
+- changed passengers from 80 to 15
