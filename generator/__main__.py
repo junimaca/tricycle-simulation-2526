@@ -7,7 +7,7 @@ if __name__ == '__main__':
     NUM_TRIKES = 2
     NUM_TERMINALS = 1
     NUM_PASSENGERS = 15
-    MAX_TIME = 5_000 
+    MAX_TIME = 500 
     TEST_COUNT = 1
     
     # Simulation parameters
