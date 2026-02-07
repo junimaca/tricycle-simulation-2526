@@ -6,7 +6,7 @@ if __name__ == '__main__':
     # Minimal scenario: 1 trike, 2 passengers (good for testing is_en_route in util/__init__.py)
     NUM_TRIKES = 2
     NUM_TERMINALS = 1
-    NUM_PASSENGERS = 80
+    NUM_PASSENGERS = 15
     MAX_TIME = 5_000 
     TEST_COUNT = 1
     

@@ -21,7 +21,8 @@ from util import NoRoute, get_euclidean_distance, find_path_between_points_in_os
 from scenarios.util import (
     gen_random_valid_point, 
     gen_random_bnf_roam_path_with_points,
-    get_valid_points
+    get_valid_points,
+    passenger_spawn_major_only,
 )
 
 # TODO: use a logger to make outputting more clean
@@ -357,7 +358,7 @@ class Simulator:
                 # passenger_source = random.choice(hotspots)
                 while True:
                     try:
-                        passenger_source = gen_random_valid_point()
+                        passenger_source = passenger_spawn_major_only()
                         if self.useFixedHotspots:
                             passenger_dest = random.choice(validFixedHotspots)
                         else:

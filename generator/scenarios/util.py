@@ -7,8 +7,17 @@ import random
 import config
 import entities
 import util
+from config import KALAYAAN_AVE, MAPAGKAWANGGAWA_ST, MAGINHAWA_ST, MALINGAP_ST
+from shapely.geometry import LineString, Point
 
 from util import NoRoute
+
+major_roads = {
+    "Kalayaan Avenue": LineString(KALAYAAN_AVE),
+    "Mapagkawangga St": LineString(MAPAGKAWANGGAWA_ST),
+    "Maginhawa St": LineString(MAGINHAWA_ST),
+    "Malingap St": LineString(MALINGAP_ST)
+}
 
 def get_random(min, max):
     return min + random.random() * (max - min)
@@ -26,6 +35,30 @@ def gen_random_valid_point():
     point_raw = gen_random_point()
     point = entities.Point(*util.find_nearest_point_in_osrm_path(point_raw.x, point_raw.y))
     return point
+
+def passenger_spawn_major_only():
+    "Returns a random point in the map that is on the major road"
+
+    point_A = gen_random_point()
+    p = Point(point_A.x, point_A.y) 
+
+   
+    closest_point = None
+    min_distance = float('inf')
+
+    for line in major_roads.values():
+        
+        candidate_point = line.interpolate(line.project(p))
+        d = p.distance(candidate_point)
+
+        if d < min_distance:
+            min_distance = d
+            closest_point = candidate_point
+
+    return entities.Point(closest_point.x, closest_point.y)
+
+
+
 
 def get_valid_points(points):
     "Returns a list of valid points based on provided list. Each point in the list must be in (y,x)"
