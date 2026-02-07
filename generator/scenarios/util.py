@@ -12,15 +12,11 @@ from shapely.geometry import LineString, Point
 
 from util import NoRoute
 
-# Config road coords are (lat, lon); LineString expects (x, y) = (lon, lat)
-def _to_linestring(coords):
-    return LineString([(lon, lat) for lat, lon in coords])
-
 major_roads = {
-    "Kalayaan Avenue": _to_linestring(KALAYAAN_AVE),
-    "Mapagkawangga St": _to_linestring(MAPAGKAWANGGAWA_ST),
-    "Maginhawa St": _to_linestring(MAGINHAWA_ST),
-    "Malingap St": _to_linestring(MALINGAP_ST)
+    "Kalayaan Avenue": LineString([(lon, lat) for lat, lon in KALAYAAN_AVE]),
+    "Mapagkawanggawa St": LineString([(lon, lat) for lat, lon in MAPAGKAWANGGAWA_ST]),
+    "Maginhawa St": LineString([(lon, lat) for lat, lon in MAGINHAWA_ST]),
+    "Malingap St": LineString([(lon, lat) for lat, lon in MALINGAP_ST]),
 }
 
 def get_random(min, max):
@@ -61,7 +57,7 @@ def passenger_spawn_major_only():
     if closest_point is None:
         raise ValueError("major_roads is empty; cannot spawn on major road")
 
-    return entities.Point(closest_point.x, closest_point.y)
+    return entities.Point(*util.find_nearest_point_in_osrm_path(closest_point.x, closest_point.y))
 
 def get_valid_points(points):
     "Returns a list of valid points based on provided list. Each point in the list must be in (y,x)"
