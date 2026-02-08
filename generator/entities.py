@@ -1,6 +1,6 @@
 import json
 import util
-from scenarios.util import gen_random_bnf_roam_path
+from scenarios.util import gen_random_bnf_roam_path, get_nearest_major_road, gen_major_road_roam_path
 from enum import Enum
 
 MS_PER_FRAME = 1000
@@ -652,7 +652,9 @@ class Tricycle(Actor):
         and not interrupt current passenger service.
         """
         # Consider including probabilities for different path types
-        new_path = gen_random_bnf_roam_path()
+        current_location = Point(self.x, self.y)
+        major_road = get_nearest_major_road(current_location)
+        new_path = gen_major_road_roam_path(major_road)
         if new_path:
             # Use 'append' priority to maintain path continuity and current service
             if self.updatePath(new_path.getStartPoint(), priority='append'):
@@ -668,6 +670,11 @@ class Tricycle(Actor):
                     },
                     "time": current_time,
                     "location": [self.path[-1].x, self.path[-1].y]
+                })
+
+                self.events.append({
+                    "type": major_road,
+                    "time": current_time,
                 })
                 return [new_path.getStartPoint(), new_path.path[-1]]
             else:
@@ -806,12 +813,12 @@ class Tricycle(Actor):
                     pass
             allow_enqueue = empty or dest_en_route
 
-            self.events.append({
-                "type": "DECIDE",
-                "data": dest_en_route,
-                "time": current_time,
-                "location": [p.src.x, p.src.y]
-            })
+            # self.events.append({
+            #     "type": "DECIDE",
+            #     "data": dest_en_route,
+            #     "time": current_time,
+            #     "location": [p.src.x, p.src.y]
+            # })
 
             if allow_enqueue:
                 # Update passenger status to ENQUEUED and claim them

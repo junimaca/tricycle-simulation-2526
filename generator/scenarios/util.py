@@ -8,6 +8,7 @@ import config
 import entities
 import util
 from config import KALAYAAN_AVE, MAPAGKAWANGGAWA_ST, MAGINHAWA_ST, MALINGAP_ST
+from shapely import get_coordinates
 from shapely.geometry import LineString, Point
 
 from util import NoRoute
@@ -35,6 +36,23 @@ def gen_random_valid_point():
     point_raw = gen_random_point()
     point = entities.Point(*util.find_nearest_point_in_osrm_path(point_raw.x, point_raw.y))
     return point
+
+def get_nearest_major_road(coords):
+    "Returns the nearest major road to the point"
+
+    p = Point(coords.x, coords.y)
+    candidate_point = None
+    min_distance = float('inf')
+    nearest_road = ""
+
+    for name, road in major_roads.items():
+        candidate_point = road.interpolate(road.project(p))
+        d = p.distance(candidate_point)
+        if d < min_distance:
+            nearest_road = name
+            min_distance = d
+
+    return nearest_road
 
 def passenger_spawn_major_only():
     "Returns a random point in the map that is on the major road"
@@ -115,3 +133,10 @@ def gen_random_bnf_roam_path_with_points(*points):
             util.find_path_between_points_in_osrm(points[i].toTuple(), points[i+1].toTuple())
             util.find_path_between_points_in_osrm(points[i+1].toTuple(), points[i].toTuple())
         return entities.Cycle(points[0], points[1])
+
+def gen_major_road_roam_path(road_name):
+    coords = get_coordinates(major_roads[road_name])
+    endpoint_1 = entities.Point(*util.find_nearest_point_in_osrm_path(*coords[0]))
+    endpoint_2 = entities.Point(*util.find_nearest_point_in_osrm_path(*coords[-1]))
+    return gen_random_bnf_roam_path_with_points(endpoint_1, endpoint_2)
+    

@@ -186,7 +186,6 @@ MALINGAP_ST = [
     (14.64289, 121.05987), # Mahiyain St
     (14.64293, 121.06043), # Matimtiman St
     (14.64297, 121.06103), # Maginhawa St
-
 ]
 
 TOP_LEFT_Y, TOP_LEFT_X = TOP_LEFT_MAGIN
