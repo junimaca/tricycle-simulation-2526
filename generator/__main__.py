@@ -4,7 +4,7 @@ from scenarios.real import Simulator, defaultTrikeConfig
 
 if __name__ == '__main__':
     # Minimal scenario: 1 trike, 2 passengers (good for testing is_en_route in util/__init__.py)
-    NUM_TRIKES = 2
+    NUM_TRIKES = 1
     NUM_TERMINALS = 1
     NUM_PASSENGERS = 15
     MAX_TIME = 5_000
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # Simulation parameters
     S_ENQUEUE_RADIUS_METERS = 20  # Radius for enqueueing when tricycle is serving passengers
     ENQUEUE_RADIUS_METERS = 20  # Radius for enqueueing when tricycle is not serving passengers
-    MAX_CYCLES = 1  # Maximum number of cycles a tricycle can roam without picking up passengers
+    MAX_CYCLES = 2  # Maximum number of cycles a tricycle can roam without picking up passengers
     
     # Create custom trike config
     trike_config = {**defaultTrikeConfig}

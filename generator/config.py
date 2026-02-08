@@ -144,48 +144,48 @@ REAL_MAGIN_HOTSPOTS = [
 
 # List of major roads and their intersections
 KALAYAAN_AVE = [
-    (14.64644, 121.05247), # Mayaman St
+    (14.6464377, 121.0524858), # Mayaman St
     (14.64615, 121.05268), # Makatarungan Rd
     (14.64563, 121.05306), # Matalino St
     (14.64528, 121.05327), # Malamig St
-    (14.64426, 121.05375), # Masigla Ext
+    (14.6421083, 121.0545966), # Masigla Ext
     (14.64208, 121.05455), # Malingap St
     (14.64124, 121.05473), # Maparaan St
-    (14.63935, 121.05494), # Matino St
+    (14.6393375, 121.05498), # Matino St
 ]
 MAPAGKAWANGGAWA_ST = [
-    (14.64721, 121.05751), # Maginhawa St
+    (14.6472602, 121.057501), # Maginhawa St
     (14.64614, 121.05725), # Matimtiman St
     (14.64558, 121.05725), # Mahiyain St
     (14.64501, 121.05730), # Magiting St
     (14.64447, 121.05746), # Mabait St
     (14.64393, 121.05767), # Mahabagin St
     (14.64337, 121.05790), # Maalalahanin St
-    (14.64273, 121.05805), # Malingap St
+    (14.6427614, 121.058014), # Malingap St
     (14.64211, 121.05814), # Masambahin St
     (14.64158, 121.05820), # Maningning St
     (14.64100, 121.05822), # Madasalin St
-    (14.63918, 121.05832), # Matino St
+    (14.6392041, 121.0582869), # Maligim St
 ]
 MAGINHAWA_ST = [
-    (14.64726, 121.05753), # Mapagkawanggawa St
+    (14.6472602, 121.057501), # Mapagkawanggawa St
     (14.64645, 121.05901), # Magiting St
     (14.64546, 121.06088), # Masinsinan St
     (14.64427, 121.06096), # Mahabagin St/P Francisco St
     (14.64360, 121.06103), 
-    (14.64297, 121.06107), # Malingap St
+    (14.6429798, 121.0610603), # Malingap St
     (14.64236, 121.06114), 
     (14.64120, 121.06121), # Madasalin St
-    (14.63908, 121.06136), # Magpakumbaba St
+    (14.639086, 121.0613754), # Magpakumbaba St
 ]
 MALINGAP_ST = [
-    (14.64210, 121.05456), # Kalayaan Ave
+    (14.6421083, 121.0545966), # Kalayaan Ave
     (14.64228, 121.05537), # Matahimik St
     (14.64240, 121.05600), # Malumanay St
-    (14.64273, 121.05805), # Magpakawanggawa St
+    (14.6427614, 121.058014), # Magpakawanggawa St
     (14.64289, 121.05987), # Mahiyain St
     (14.64293, 121.06043), # Matimtiman St
-    (14.64297, 121.06103), # Maginhawa St
+    (14.6429798, 121.0610603), # Maginhawa St
 ]
 
 TOP_LEFT_Y, TOP_LEFT_X = TOP_LEFT_MAGIN

@@ -657,7 +657,7 @@ class Tricycle(Actor):
         new_path = gen_major_road_roam_path(major_road)
         if new_path:
             # Use 'append' priority to maintain path continuity and current service
-            if self.updatePath(new_path.getStartPoint(), priority='append'):
+            if self.updatePath(new_path.getStartPoint(), priority='replace'):
                 self.roamPath = new_path
                 self.cycleCount = 0
                 
@@ -1160,6 +1160,7 @@ class Tricycle(Actor):
         if self.status == TricycleStatus.ROAMING and not self.hasPassenger() and not self.enqueuedPassenger:
             self.cycleCount += 1
             if self.cycleCount >= self.maxCycles:
+                self.cycleCount == 0
                 self.newRoamPath(current_time)
    
    ########## Serialization Methods ##########
