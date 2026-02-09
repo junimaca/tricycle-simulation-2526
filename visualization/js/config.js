@@ -30,9 +30,9 @@ export const API_ENDPOINTS = {
 
 // Default simulation parameters
 export const DEFAULT_SIMULATION = {
-    id: "1-1-15-jdthhqykjjag",
+    id: "1-1-20-bjcicieoyvht",
     trikes: 1,
-    passengers: 15 
+    passengers: 20
 };
 
 // Utility functions

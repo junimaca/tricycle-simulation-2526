@@ -3,10 +3,9 @@ import config
 from scenarios.real import Simulator, defaultTrikeConfig
 
 if __name__ == '__main__':
-    # Minimal scenario: 1 trike, 2 passengers (good for testing is_en_route in util/__init__.py)
     NUM_TRIKES = 1
     NUM_TERMINALS = 1
-    NUM_PASSENGERS = 15
+    NUM_PASSENGERS = 20
     MAX_TIME = 5_000
     TEST_COUNT = 1
     

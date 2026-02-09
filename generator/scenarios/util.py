@@ -54,12 +54,15 @@ def get_nearest_major_road(coords):
 
     return nearest_road
 
+def choose_different_major_road(exclude_road):
+    remaining_roads = [r for r in major_roads.keys() if r != exclude_road]
+    return random.choice(remaining_roads)
+
 def passenger_spawn_major_only():
     "Returns a random point in the map that is on the major road"
 
     point_A = gen_random_point()
     p = Point(point_A.x, point_A.y) 
-
    
     closest_point = None
     min_distance = float('inf')
