@@ -1,6 +1,6 @@
 import json
 import util
-from scenarios.util import gen_random_bnf_roam_path, get_nearest_major_road, gen_major_road_roam_path, choose_different_major_road
+from scenarios.util import gen_random_bnf_roam_path
 from enum import Enum
 
 MS_PER_FRAME = 1000
@@ -392,7 +392,6 @@ class Tricycle(Actor):
         self.passengers = []
         self.enqueuedPassenger = None  # Track single enqueued passenger
         self.status = TricycleStatus.ROAMING if isRoaming else TricycleStatus.IDLE
-        self.major_road = "" # Major road the tricycle is roaming in
 
         # initialize metrics
         self.totalDistance = 0
@@ -646,21 +645,21 @@ class Tricycle(Actor):
             # print(f"Failed to add next cycle point", flush=True)
             pass
 
-    def newRoamPath(self, current_time: int, need_new_road: bool = False):
+    def newRoamPath(self, current_time: int):
         """
         Generates a new roaming path for the tricycle.
         Uses updatePath with append priority to ensure path continuity
         and not interrupt current passenger service.
         """
         # Consider including probabilities for different path types
-        current_location = Point(self.x, self.y)
-        self.major_road = get_nearest_major_road(current_location)
-        if need_new_road:
-            self.major_road = choose_different_major_road(self.major_road)
-        new_path = gen_major_road_roam_path(self.major_road)
+        # current_location = Point(self.x, self.y)
+        # self.major_road = get_nearest_major_road(current_location)
+        # if need_new_road:
+        #     self.major_road = choose_different_major_road(self.major_road)
+        new_path = gen_random_bnf_roam_path()
         if new_path:
             # Use 'append' priority to maintain path continuity and current service
-            if self.updatePath(new_path.getStartPoint(), priority='replace'):
+            if self.updatePath(new_path.getStartPoint(), priority='append'):
                 self.roamPath = new_path
                 self.cycleCount = 0
                 
@@ -675,10 +674,6 @@ class Tricycle(Actor):
                     "location": [self.path[-1].x, self.path[-1].y]
                 })
 
-                self.events.append({
-                    "type": self.major_road,
-                    "time": current_time,
-                })
                 return [new_path.getStartPoint(), new_path.path[-1]]
             else:
                 # print(f"Failed to update path for new roam path", flush=True)
@@ -1059,7 +1054,6 @@ class Tricycle(Actor):
                     pass
             # If no passengers at all, go to the nearest major road
             else:
-                self.newRoamPath(current_time)
                 print(f"Current to go list length: {len(self.to_go)} at time {current_time}", flush=True)
         
         return dropped
@@ -1166,8 +1160,7 @@ class Tricycle(Actor):
         if self.status == TricycleStatus.ROAMING and not self.hasPassenger() and not self.enqueuedPassenger:
             self.cycleCount += 1
             if self.cycleCount >= self.maxCycles:
-                self.cycleCount == 0
-                self.newRoamPath(current_time, True)
+                self.newRoamPath(current_time)
    
    ########## Serialization Methods ##########
 

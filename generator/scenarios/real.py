@@ -358,7 +358,7 @@ class Simulator:
                 # passenger_source = random.choice(hotspots)
                 while True:
                     try:
-                        passenger_source = passenger_spawn_major_only()
+                        passenger_source = gen_random_valid_point()
                         if self.useFixedHotspots:
                             passenger_dest = random.choice(validFixedHotspots)
                         else:
