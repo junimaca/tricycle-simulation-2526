@@ -30,6 +30,7 @@ def build_graph(tolerance = 0.001):
         TOP_LEFT_MAGIN[0]+tolerance),
         network_type='drive'
     )
+    return map_graph
 
 def get_random(min, max):
     return min + random.random() * (max - min)

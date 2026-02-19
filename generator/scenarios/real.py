@@ -14,6 +14,7 @@ import time
 import config
 import entities
 import algos
+import osmnx as ox
 
 from entities import PassengerStatus, TricycleStatus
 from util import NoRoute, get_euclidean_distance, find_path_between_points_in_osrm
@@ -240,7 +241,8 @@ class Simulator:
         )
 
         # Build OSMNX graph
-        build_graph()
+        map_graph = build_graph()
+        # print(list(nodes))
 
         # Use fixed hotspot coordinates for roaming trike starts when provided; otherwise random
         if self.useFixedHotspots and fixedHotspots:
@@ -437,7 +439,7 @@ class Simulator:
             """
             Each frame is generated here. You can modify the subtleties of the interactions here.
             """
-            
+
             # 1. First detect nearby passengers and plan routes
             for trike in tricycles:
                 if not trike.active:
@@ -469,8 +471,21 @@ class Simulator:
                 for passenger in loaded:
                     # print("----Loaded", passenger.id, trike.id, flush=True)
                     process_passenger(passenger, trike)
-                
-            # 3. Move tricycles
+
+            # 3. Detect if in intersection
+            for trike in tricycles:
+                dist_tolerance = 0.00001 # ~1.1meters
+
+                trike_x = trike.curPoint().x
+                trike_y = trike.curPoint().y
+                nearest_node = ox.distance.nearest_nodes(map_graph, trike_x, trike_y)
+                node_x = map_graph.nodes[nearest_node]['x']
+                node_y = map_graph.nodes[nearest_node]['y']
+                dist = get_euclidean_distance((trike_x, trike_y), (node_x, node_y))
+                if dist < dist_tolerance:
+                    print(f'{cur_time[0]}: {dist}')
+
+            # 4. Move tricycles
             for trike in tricycles:
                 if not trike.active:
                     continue
