@@ -7,11 +7,11 @@ import random
 import config
 import entities
 import util
+import osmnx as ox
 from config import KALAYAAN_AVE, MAPAGKAWANGGAWA_ST, MAGINHAWA_ST, MALINGAP_ST
+from config import TOP_LEFT_MAGIN, BOT_RIGHT_MAGIN
 from shapely import get_coordinates
 from shapely.geometry import LineString, Point
-
-from util import NoRoute
 
 major_roads = {
     "Kalayaan Avenue": LineString([(lon, lat) for lat, lon in KALAYAAN_AVE]),
@@ -19,6 +19,17 @@ major_roads = {
     "Maginhawa St": LineString([(lon, lat) for lat, lon in MAGINHAWA_ST]),
     "Malingap St": LineString([(lon, lat) for lat, lon in MALINGAP_ST]),
 }
+map_graph = None
+
+def build_graph(tolerance = 0.001):
+    global map_graph
+    map_graph = ox.graph_from_bbox((
+        TOP_LEFT_MAGIN[1]-tolerance,
+        BOT_RIGHT_MAGIN[0]-tolerance,
+        BOT_RIGHT_MAGIN[1]+tolerance,
+        TOP_LEFT_MAGIN[0]+tolerance),
+        network_type='drive'
+    )
 
 def get_random(min, max):
     return min + random.random() * (max - min)

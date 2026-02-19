@@ -17,6 +17,7 @@ import algos
 
 from entities import PassengerStatus, TricycleStatus
 from util import NoRoute, get_euclidean_distance, find_path_between_points_in_osrm
+from scenarios.util import build_graph
 
 from scenarios.util import (
     gen_random_valid_point, 
@@ -237,6 +238,9 @@ class Simulator:
             config.BOT_RIGHT_X,
             config.TOP_LEFT_Y
         )
+
+        # Build OSMNX graph
+        build_graph()
 
         # Use fixed hotspot coordinates for roaming trike starts when provided; otherwise random
         if self.useFixedHotspots and fixedHotspots:

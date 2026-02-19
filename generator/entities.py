@@ -1053,8 +1053,8 @@ class Tricycle(Actor):
                     # print(f"No more passengers to schedule for {self.id}", flush=True)
                     pass
             # If no passengers at all, go to the nearest major road
-            else:
-                print(f"Current to go list length: {len(self.to_go)} at time {current_time}", flush=True)
+            # else:
+            #     print(f"Current to go list length: {len(self.to_go)} at time {current_time}", flush=True)
         
         return dropped
 
