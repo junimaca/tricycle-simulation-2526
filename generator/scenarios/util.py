@@ -32,6 +32,8 @@ def build_graph(tolerance = 0.001):
     )
     return map_graph
 
+### Point Generation Functions ###
+
 def get_random(min, max):
     return min + random.random() * (max - min)
 
@@ -49,49 +51,6 @@ def gen_random_valid_point():
     point = entities.Point(*util.find_nearest_point_in_osrm_path(point_raw.x, point_raw.y))
     return point
 
-def get_nearest_major_road(coords):
-    "Returns the nearest major road to the point"
-
-    p = Point(coords.x, coords.y)
-    candidate_point = None
-    min_distance = float('inf')
-    nearest_road = ""
-
-    for name, road in major_roads.items():
-        candidate_point = road.interpolate(road.project(p))
-        d = p.distance(candidate_point)
-        if d < min_distance:
-            nearest_road = name
-            min_distance = d
-
-    return nearest_road
-
-def choose_different_major_road(exclude_road):
-    remaining_roads = [r for r in major_roads.keys() if r != exclude_road]
-    return random.choice(remaining_roads)
-
-def passenger_spawn_major_only():
-    "Returns a random point in the map that is on the major road"
-
-    point_A = gen_random_point()
-    p = Point(point_A.x, point_A.y) 
-   
-    closest_point = None
-    min_distance = float('inf')
-
-    for line in major_roads.values():
-        candidate_point = line.interpolate(line.project(p))
-        d = p.distance(candidate_point)
-
-        if d < min_distance:
-            min_distance = d
-            closest_point = candidate_point
-
-    if closest_point is None:
-        raise ValueError("major_roads is empty; cannot spawn on major road")
-
-    return entities.Point(*util.find_nearest_point_in_osrm_path(closest_point.x, closest_point.y))
-
 def get_valid_points(points):
     "Returns a list of valid points based on provided list. Each point in the list must be in (y,x)"
     return [entities.Point(*util.find_nearest_point_in_osrm_path(p[1], p[0])) for p in points]
@@ -102,6 +61,8 @@ def get_random_valid_point(points):
     point_raw = random.choice(points)
     point = entities.Point(*util.find_nearest_point_in_osrm_path(point_raw[1], point_raw[0]))
     return point
+
+### Roaming Functions ###
 
 def gen_random_bnf_roam_path():
     "Returns a back-n-forth path in the map"
@@ -149,9 +110,55 @@ def gen_random_bnf_roam_path_with_points(*points):
             util.find_path_between_points_in_osrm(points[i+1].toTuple(), points[i].toTuple())
         return entities.Cycle(points[0], points[1])
 
+### Major Road Functions ###
+
+def get_nearest_major_road(coords):
+    "Returns the nearest major road to the point"
+
+    p = Point(coords.x, coords.y)
+    candidate_point = None
+    min_distance = float('inf')
+    nearest_road = ""
+
+    for name, road in major_roads.items():
+        candidate_point = road.interpolate(road.project(p))
+        d = p.distance(candidate_point)
+        if d < min_distance:
+            nearest_road = name
+            min_distance = d
+
+    return nearest_road
+
+def choose_different_major_road(exclude_road):
+    remaining_roads = [r for r in major_roads.keys() if r != exclude_road]
+    return random.choice(remaining_roads)
+
+def passenger_spawn_major_only():
+    "Returns a random point in the map that is on the major road"
+
+    point_A = gen_random_point()
+    p = Point(point_A.x, point_A.y) 
+   
+    closest_point = None
+    min_distance = float('inf')
+
+    for line in major_roads.values():
+        candidate_point = line.interpolate(line.project(p))
+        d = p.distance(candidate_point)
+
+        if d < min_distance:
+            min_distance = d
+            closest_point = candidate_point
+
+    if closest_point is None:
+        raise ValueError("major_roads is empty; cannot spawn on major road")
+
+    return entities.Point(*util.find_nearest_point_in_osrm_path(closest_point.x, closest_point.y))
+
 def gen_major_road_roam_path(road_name):
     coords = get_coordinates(major_roads[road_name])
     endpoint_1 = entities.Point(*util.find_nearest_point_in_osrm_path(*coords[0]))
     endpoint_2 = entities.Point(*util.find_nearest_point_in_osrm_path(*coords[-1]))
     return gen_random_bnf_roam_path_with_points(endpoint_1, endpoint_2)
     
+### Intersection Decision Functions ###

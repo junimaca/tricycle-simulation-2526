@@ -18,13 +18,13 @@ import osmnx as ox
 
 from entities import PassengerStatus, TricycleStatus
 from util import NoRoute, get_euclidean_distance, find_path_between_points_in_osrm
-from scenarios.util import build_graph
 
 from scenarios.util import (
     gen_random_valid_point, 
     gen_random_bnf_roam_path_with_points,
     get_valid_points,
     passenger_spawn_major_only,
+    build_graph,
 )
 
 # TODO: use a logger to make outputting more clean
@@ -299,7 +299,10 @@ class Simulator:
                 )
                 
                 # Generate initial roam path
-                if trike.newRoamPath(0):  # Pass current_time=0
+                nearest_intersection = trike.curPoint().toTuple()
+                nearest_node = ox.distance.nearest_nodes(map_graph, nearest_intersection[0], nearest_intersection[1])
+                node_coords = map_graph.nodes[nearest_node]
+                if trike.updatePath(entities.Point(node_coords['x'], node_coords['y']), "front"):  # Pass current_time=0
                     # print(f"Generated {trike.id} with initial roam path at {start_hotspot.toTuple()}", flush=True)
                     pass
                 else:
@@ -482,8 +485,12 @@ class Simulator:
                 node_x = map_graph.nodes[nearest_node]['x']
                 node_y = map_graph.nodes[nearest_node]['y']
                 dist = get_euclidean_distance((trike_x, trike_y), (node_x, node_y))
-                if dist < dist_tolerance:
-                    print(f'{cur_time[0]}: {dist}')
+                # if dist < dist_tolerance:
+                #     if trike.latest_intersection != nearest_node:
+                #         trike.latest_intersection = nearest_node
+                #         print(f'{cur_time[0]}: {dist}')
+                #     else:
+                #         print("wahoo")
 
             # 4. Move tricycles
             for trike in tricycles:

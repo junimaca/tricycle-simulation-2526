@@ -392,6 +392,7 @@ class Tricycle(Actor):
         self.passengers = []
         self.enqueuedPassenger = None  # Track single enqueued passenger
         self.status = TricycleStatus.ROAMING if isRoaming else TricycleStatus.IDLE
+        self.latest_intersection = None
 
         # initialize metrics
         self.totalDistance = 0
