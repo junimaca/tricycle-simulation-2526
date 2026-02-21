@@ -665,14 +665,14 @@ class Tricycle(Actor):
         if nearest_intersection != self.latest_intersection:
             self.latest_intersection = nearest_intersection
             adjacent_intersections = list(map_graph.neighbors(nearest_intersection))
-            print(f"Available exits: {adjacent_intersections}")
+            #print(f"Available exits: {adjacent_intersections}")
 
             if self.latest_intersection in adjacent_intersections:
                 adjacent_intersections.remove(self.latest_intersection)
             
             if adjacent_intersections:
                 next_dest = random.choice(adjacent_intersections)
-                print(f"Tricycle turned at next destination: {next_dest}")
+                #print(f"Tricycle turned at next destination: {next_dest}")
 
                 node_coords = map_graph.nodes[next_dest]
                 new_destination = Point(node_coords['x'], node_coords['y'])
