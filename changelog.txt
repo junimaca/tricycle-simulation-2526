@@ -236,3 +236,11 @@ So line 42 means: “For each passenger in the list, store that whole passenger 
 
 4. main.py
 - changed passengers from 80 to 15
+
+2/21/2026
+
+1. entities.py
+- turnIntersection(self, nearest_intersection, map_graph) function added for deciding where to turn
+
+2. real.py
+- called the function in order to make the tricycle turn in the simulation
