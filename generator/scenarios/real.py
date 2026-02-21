@@ -302,6 +302,7 @@ class Simulator:
                 nearest_intersection = trike.curPoint().toTuple()
                 nearest_node = ox.distance.nearest_nodes(map_graph, nearest_intersection[0], nearest_intersection[1])
                 node_coords = map_graph.nodes[nearest_node]
+                #print(type(node_coords))
                 if trike.updatePath(entities.Point(node_coords['x'], node_coords['y']), "front"):  # Pass current_time=0
                     # print(f"Generated {trike.id} with initial roam path at {start_hotspot.toTuple()}", flush=True)
                     pass
@@ -475,7 +476,7 @@ class Simulator:
                     # print("----Loaded", passenger.id, trike.id, flush=True)
                     process_passenger(passenger, trike)
 
-            # 3. Detect if in intersection
+            # 3. Detect if in intersection and handle turning
             for trike in tricycles:
                 dist_tolerance = 0.00001 # ~1.1meters
 
@@ -485,12 +486,18 @@ class Simulator:
                 node_x = map_graph.nodes[nearest_node]['x']
                 node_y = map_graph.nodes[nearest_node]['y']
                 dist = get_euclidean_distance((trike_x, trike_y), (node_x, node_y))
-                # if dist < dist_tolerance:
+                if dist < dist_tolerance:
+                    trike.turnIntersection(nearest_node, map_graph)
                 #     if trike.latest_intersection != nearest_node:
                 #         trike.latest_intersection = nearest_node
                 #         print(f'{cur_time[0]}: {dist}')
                 #     else:
                 #         print("wahoo")
+            
+
+
+
+
 
             # 4. Move tricycles
             for trike in tricycles:

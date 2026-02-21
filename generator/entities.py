@@ -1,7 +1,9 @@
 import json
 import util
+import random
 from scenarios.util import gen_random_bnf_roam_path
 from enum import Enum
+import osmnx as ox
 
 MS_PER_FRAME = 1000
 
@@ -645,7 +647,44 @@ class Tricycle(Actor):
         if not self.updatePath(nxtPoint, priority='append'):
             # print(f"Failed to add next cycle point", flush=True)
             pass
+    
+    def turnIntersection(self, nearest_intersection, map_graph):
+        """
+        Turns the tricycle as it is at the intersection, and updates the latest intersection.
+        We want the tricycle to decide randomly where to go for now, eventually weights will be added
+        to provide a bias towards the forward path.
 
+        Pseucode:
+        if the nearest intersection is NOT the latest_intersection
+
+        adjacent_intersection = G.neighbors
+        adjacent_intersections.remove(“self.latest_intersection”)
+        choose neighbor randomly
+        update path()
+        """
+        if nearest_intersection != self.latest_intersection:
+            self.latest_intersection = nearest_intersection
+            adjacent_intersections = list(map_graph.neighbors(nearest_intersection))
+            print(f"Available exits: {adjacent_intersections}")
+
+            if self.latest_intersection in adjacent_intersections:
+                adjacent_intersections.remove(self.latest_intersection)
+            
+            if adjacent_intersections:
+                next_dest = random.choice(adjacent_intersections)
+                print(f"Tricycle turned at next destination: {next_dest}")
+
+                node_coords = map_graph.nodes[next_dest]
+                new_destination = Point(node_coords['x'], node_coords['y'])
+                
+                new_path = self.updatePath(new_destination, priority='append')
+
+                if new_path:
+                    self.latest_intersection = nearest_intersection
+                    
+
+
+            
     def newRoamPath(self, current_time: int):
         """
         Generates a new roaming path for the tricycle.
