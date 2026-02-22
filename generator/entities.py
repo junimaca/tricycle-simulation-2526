@@ -654,25 +654,24 @@ class Tricycle(Actor):
         We want the tricycle to decide randomly where to go for now, eventually weights will be added
         to provide a bias towards the forward path.
 
-        Pseucode:
-        if the nearest intersection is NOT the latest_intersection
-
-        adjacent_intersection = G.neighbors
-        adjacent_intersections.remove(“self.latest_intersection”)
-        choose neighbor randomly
-        update path()
+        Pseudocode:
+        If the nearest intersection is NOT the latest_intersection:
+        - Get the list of adjacent intersections 
+        - Randomly choose neighbor
+        - Update path
         """
         if nearest_intersection != self.latest_intersection:
-            self.latest_intersection = nearest_intersection
             adjacent_intersections = list(map_graph.neighbors(nearest_intersection))
-            #print(f"Available exits: {adjacent_intersections}")
-
             if self.latest_intersection in adjacent_intersections:
                 adjacent_intersections.remove(self.latest_intersection)
+                print("works!")
+
+            self.latest_intersection = nearest_intersection    
             
+            print(f"Available neighbors: {adjacent_intersections}")
             if adjacent_intersections:
                 next_dest = random.choice(adjacent_intersections)
-                #print(f"Tricycle turned at next destination: {next_dest}")
+                print(f"Tricycle turned at next destination: {next_dest}")
 
                 node_coords = map_graph.nodes[next_dest]
                 new_destination = Point(node_coords['x'], node_coords['y'])
@@ -681,9 +680,6 @@ class Tricycle(Actor):
 
                 if new_path:
                     self.latest_intersection = nearest_intersection
-                    
-
-
             
     def newRoamPath(self, current_time: int):
         """
