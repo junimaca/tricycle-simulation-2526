@@ -12,6 +12,7 @@ from config import KALAYAAN_AVE, MAPAGKAWANGGAWA_ST, MAGINHAWA_ST, MALINGAP_ST
 from config import TOP_LEFT_MAGIN, BOT_RIGHT_MAGIN
 from shapely import get_coordinates
 from shapely.geometry import LineString, Point
+from util import NoRoute, get_euclidean_distance, find_path_between_points_in_osrm
 
 major_roads = {
     "Kalayaan Avenue": LineString([(lon, lat) for lat, lon in KALAYAAN_AVE]),
@@ -162,3 +163,29 @@ def gen_major_road_roam_path(road_name):
     return gen_random_bnf_roam_path_with_points(endpoint_1, endpoint_2)
     
 ### Intersection Decision Functions ###
+
+def check_intersection(trike, map_graph, tolerance):
+    trike_x = trike.curPoint().x
+    trike_y = trike.curPoint().y
+
+    #use nearest edge to determine if trike is in intersection, since OSMNX nodes are at intersections
+    u, v, key = ox.distance.nearest_edges(map_graph, trike_x, trike_y)
+
+    #get coordinates of the nearest edge
+    node_u = (map_graph.nodes[u]['x'], map_graph.nodes[u]['y'])
+    node_v = (map_graph.nodes[v]['x'], map_graph.nodes[v]['y'])
+
+    #get distance
+    dist_u = get_euclidean_distance((trike_x, trike_y), node_u)
+    dist_v = get_euclidean_distance((trike_x, trike_y), node_v)
+
+    if dist_u < dist_v:
+        nearest_node = u
+        dist = dist_u
+    else:
+        nearest_node = v
+        dist = dist_v
+                
+    if dist < tolerance:
+        #print(f"SUCCESS: Trike triggered turn at Node {nearest_node}")
+        trike.turnIntersection(nearest_node, map_graph)

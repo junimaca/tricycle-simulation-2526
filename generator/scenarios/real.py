@@ -25,6 +25,7 @@ from scenarios.util import (
     get_valid_points,
     passenger_spawn_major_only,
     build_graph,
+    check_intersection
 )
 
 # TODO: use a logger to make outputting more clean
@@ -480,9 +481,10 @@ class Simulator:
             for trike in tricycles:
                 dist_tolerance = 0.00001 # ~1.1meters
 
-                trike_x = trike.curPoint().x
-                trike_y = trike.curPoint().y
-                nearest_node = ox.distance.nearest_nodes(map_graph, trike_x, trike_y)
+                is_turning = check_intersection(trike, map_graph, dist_tolerance)
+
+
+                '''nearest_node = ox.distance.nearest_nodes(map_graph, trike_x, trike_y)
                 node_x = map_graph.nodes[nearest_node]['x']
                 node_y = map_graph.nodes[nearest_node]['y']
                 dist = get_euclidean_distance((trike_x, trike_y), (node_x, node_y))
@@ -492,13 +494,8 @@ class Simulator:
                 #         trike.latest_intersection = nearest_node
                 #         print(f'{cur_time[0]}: {dist}')
                 #     else:
-                #         print("wahoo")
+                #         print("wahoo")'''
             
-
-
-
-
-
             # 4. Move tricycles
             for trike in tricycles:
                 if not trike.active:
