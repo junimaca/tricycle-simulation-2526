@@ -1,7 +1,7 @@
 import json
 import util
 import random
-from scenarios.util import gen_random_bnf_roam_path
+from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection
 from enum import Enum
 import osmnx as ox
 
@@ -648,6 +648,14 @@ class Tricycle(Actor):
             # print(f"Failed to add next cycle point", flush=True)
             pass
     
+    def goToNearestIntersection(self):
+        "If tricycle has dropped off a passenger and isn't doing anything, go to the nearest intersection"
+        node_x, node_y, _, _ = get_nearest_intersection(self.curPoint())
+        if self.updatePath(Point(node_x, node_y)):
+            return True
+        else:
+            return False
+
     def turnIntersection(self, nearest_intersection, map_graph):
         """
         Turns the tricycle as it is at the intersection, and updates the latest intersection.

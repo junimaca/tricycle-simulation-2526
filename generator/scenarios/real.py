@@ -300,11 +300,7 @@ class Simulator:
                 )
                 
                 # Generate initial roam path
-                nearest_intersection = trike.curPoint().toTuple()
-                nearest_node = ox.distance.nearest_nodes(map_graph, nearest_intersection[0], nearest_intersection[1])
-                node_coords = map_graph.nodes[nearest_node]
-                #print(type(node_coords))
-                if trike.updatePath(entities.Point(node_coords['x'], node_coords['y']), "front"):  # Pass current_time=0
+                if trike.goToNearestIntersection():
                     # print(f"Generated {trike.id} with initial roam path at {start_hotspot.toTuple()}", flush=True)
                     pass
                 else:
