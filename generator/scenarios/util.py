@@ -187,9 +187,16 @@ def get_nearest_intersection(point):
     else:
         return v_x, v_y, dist_v, v
 
-def check_intersection(trike, map_graph, tolerance):
-    trike_x = trike.curPoint().x
-    trike_y = trike.curPoint().y
+def get_adjacent_intersections(node_id):
+    "Return list of adjacent nodes to node with given node_id"
+    return list(map_graph.neighbors(node_id))
+
+def check_intersection(point, tolerance = 0.00001):
+    "Return nearest_node if near an intersection, otherwise return none"
+
+    global map_graph
+    trike_x = point.x
+    trike_y = point.y
 
     # Use nearest edge to determine if trike is in intersection, since OSMNX nodes are at intersections
     u, v, key = ox.distance.nearest_edges(map_graph, trike_x, trike_y)
@@ -202,5 +209,7 @@ def check_intersection(trike, map_graph, tolerance):
     _, _, dist, nearest_node = get_nearest_intersection(entities.Point(trike_x, trike_y))
                 
     if dist < tolerance:
-        #print(f"SUCCESS: Trike triggered turn at Node {nearest_node}")
-        trike.turnIntersection(nearest_node, map_graph)
+        # print(f"SUCCESS: Trike triggered turn at Node {nearest_node}")
+        return nearest_node
+    else:
+        return None

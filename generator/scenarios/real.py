@@ -477,20 +477,9 @@ class Simulator:
             for trike in tricycles:
                 dist_tolerance = 0.00001 # ~1.1meters
 
-                is_turning = check_intersection(trike, map_graph, dist_tolerance)
-
-
-                '''nearest_node = ox.distance.nearest_nodes(map_graph, trike_x, trike_y)
-                node_x = map_graph.nodes[nearest_node]['x']
-                node_y = map_graph.nodes[nearest_node]['y']
-                dist = get_euclidean_distance((trike_x, trike_y), (node_x, node_y))
-                if dist < dist_tolerance:
-                    trike.turnIntersection(nearest_node, map_graph)
-                #     if trike.latest_intersection != nearest_node:
-                #         trike.latest_intersection = nearest_node
-                #         print(f'{cur_time[0]}: {dist}')
-                #     else:
-                #         print("wahoo")'''
+                nearest_node = check_intersection(trike.curPoint())
+                if nearest_node:
+                    trike.turnIntersection()
             
             # 4. Move tricycles
             for trike in tricycles:

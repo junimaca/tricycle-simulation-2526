@@ -1,7 +1,7 @@
 import json
 import util
 import random
-from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection
+from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection, node_id_to_coords, get_adjacent_intersections
 from enum import Enum
 import osmnx as ox
 
@@ -394,7 +394,7 @@ class Tricycle(Actor):
         self.passengers = []
         self.enqueuedPassenger = None  # Track single enqueued passenger
         self.status = TricycleStatus.ROAMING if isRoaming else TricycleStatus.IDLE
-        self.latest_intersection = None
+        self.latest_intersection = None # stores NODE ID
 
         # initialize metrics
         self.totalDistance = 0
@@ -657,7 +657,7 @@ class Tricycle(Actor):
         else:
             return False
 
-    def turnIntersection(self, nearest_intersection, map_graph):
+    def turnIntersection(self):
         """
         Turns the tricycle as it is at the intersection, and updates the latest intersection.
         We want the tricycle to decide randomly where to go for now, eventually weights will be added
@@ -669,26 +669,27 @@ class Tricycle(Actor):
         - Randomly choose neighbor
         - Update path
         """
-        if nearest_intersection != self.latest_intersection:
-            adjacent_intersections = list(map_graph.neighbors(nearest_intersection))
+        _, _, _, nearest_node = get_nearest_intersection(self.curPoint())
+
+        # print(f"excluded intersection {self.latest_intersection}")
+        if nearest_node != self.latest_intersection:
+            # print(f"Replaced intersection: {nearest_node}")
+            adjacent_intersections = get_adjacent_intersections(nearest_node)
             if self.latest_intersection in adjacent_intersections:
                 adjacent_intersections.remove(self.latest_intersection)
-                # print("works!")
 
-            self.latest_intersection = nearest_intersection    
+            self.latest_intersection = nearest_node    
             
-            # print(f"Available neighbors: {adjacent_intersections}")
+            print(f"Available neighbors: {adjacent_intersections}")
             if adjacent_intersections:
                 next_dest = random.choice(adjacent_intersections)
                 # print(f"Tricycle turned at next destination: {next_dest}")
 
-                node_coords = map_graph.nodes[next_dest]
-                new_destination = Point(node_coords['x'], node_coords['y'])
-                
-                new_path = self.updatePath(new_destination, priority='append')
+                node_x, node_y, _, _ = get_nearest_intersection(Point(*node_id_to_coords(next_dest)))
+                new_path = self.updatePath(Point(node_x, node_y), priority='append')
 
                 if new_path:
-                    self.latest_intersection = nearest_intersection
+                    self.latest_intersection = nearest_node
             
     def newRoamPath(self, current_time: int):
         """
