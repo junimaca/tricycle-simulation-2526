@@ -558,8 +558,8 @@ class Simulator:
                         else:
                             # print("----Trike didn't move. Attempting to load next cycle point")
                             # Call onCycleComplete before loading next point
-                            trike.onCycleComplete(cur_time[0])
-                            trike.loadNextCyclePoint()
+                            trike.goToNearestIntersection()
+                            # trike.loadNextCyclePoint()
                 except Exception as e:
                     print(f"Encountered error while trying to move tricycle {trike.id}:", e)
                     print(traceback.format_exc())

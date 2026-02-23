@@ -652,6 +652,7 @@ class Tricycle(Actor):
         "If tricycle has dropped off a passenger and isn't doing anything, go to the nearest intersection"
         node_x, node_y, _, _ = get_nearest_intersection(self.curPoint())
         if self.updatePath(Point(node_x, node_y)):
+            self.updateStatus(TricycleStatus.ROAMING)
             return True
         else:
             return False
@@ -1217,7 +1218,7 @@ class Tricycle(Actor):
             "id": self.id,
             "type": "trike",
             "speed": self.speed,
-            "roamPath": self.roamPath.toJSON() if self.isRoaming else "None",
+            "roamPath": self.roamPath.toJSON() if self.isRoaming and self.roamPath else "None",
             "isRoaming": self.isRoaming,
             "startX": self.x,
             "startY": self.y,
