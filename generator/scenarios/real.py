@@ -298,7 +298,7 @@ class Simulator:
                     enqueue_radius_meters=self.trikeConfig["enqueue_radius_meters"]
                 )
                 
-                if trike.goToNearestIntersection():  # Pass current_time=0
+                if trike.goToNearestIntersection(0):  # Pass current_time=0
                     # print(f"Generated {trike.id} with initial roam path at {start_hotspot.toTuple()}", flush=True)
                     pass
                 else:

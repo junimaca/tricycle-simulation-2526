@@ -1,6 +1,6 @@
 import json
 import util
-from scenarios.util import gen_random_bnf_roam_path
+from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection
 from enum import Enum
 
 MS_PER_FRAME = 1000
@@ -680,11 +680,19 @@ class Tricycle(Actor):
                 # print(f"Failed to update path for new roam path", flush=True)
                 return None
 
-    def goToNearestIntersection(self):
+    def goToNearestIntersection(self, current_time):
         "If tricycle has dropped off a passenger and isn't doing anything, go to the nearest intersection"
         node_x, node_y, _, _ = get_nearest_intersection(self.curPoint())
         if self.updatePath(Point(node_x, node_y)):
             self.updateStatus(TricycleStatus.ROAMING)
+            self.events.append({
+                "type": "NEAREST_INTERSECTION",
+                "data": {
+                    "intersection": (node_x, node_y)
+                },
+                "time": current_time,
+                "location": self.curPoint().toTuple()
+            })
             return True
         else:
             return False

@@ -367,6 +367,7 @@
 .event-log-entry[data-event-type="LOAD"] .event-type { color: #fea400; }
 .event-log-entry[data-event-type="DROP-OFF"] .event-type { color: #018001; }
 .event-log-entry[data-event-type="NEW_ROAM_PATH"] .event-type { color: #9900cc; }
+.event-log-entry[data-event-type="NEAREST_INTERSECTION"] .event-type { color: #ff00ff; }
 
 /* Tricycle Status Panel */
 #tricycleStatus {
