@@ -162,3 +162,53 @@ def gen_major_road_roam_path(road_name):
     return gen_random_bnf_roam_path_with_points(endpoint_1, endpoint_2)
     
 ### Intersection Decision Functions ###
+
+def node_id_to_coords(node_id):
+    "Returns coordinates of node id (x, y)"
+    global map_graph
+    node_data = map_graph.nodes[node_id]
+    node_x = node_data['x']
+    node_y = node_data['y']
+    return node_x, node_y
+
+def get_nearest_intersection(point):
+    "Returns the coordinates of the intersection closest (by travel distance) to the point"
+    global map_graph
+    u, v, _ = ox.distance.nearest_edges(map_graph, point.x, point.y)
+
+    u_x, u_y = node_id_to_coords(u)
+    v_x, v_y = node_id_to_coords(v)
+    dist_u = ox.distance.euclidean(u_y, u_x, point.y, point.x)
+    dist_v = ox.distance.euclidean(v_y, v_x, point.y, point.x)
+
+    if dist_u < dist_v:
+        return u_x, u_y, dist_u, u
+    else:
+        return v_x, v_y, dist_v, v
+
+def get_adjacent_intersections(node_id):
+    "Return list of adjacent nodes to node with given node_id"
+    return list(map_graph.neighbors(node_id))
+
+def check_intersection(point, tolerance = 0.00001):
+    "Return nearest_node if near an intersection, otherwise return none"
+
+    global map_graph
+    trike_x = point.x
+    trike_y = point.y
+
+    # Use nearest edge to determine if trike is in intersection, since OSMNX nodes are at intersections
+    u, v, key = ox.distance.nearest_edges(map_graph, trike_x, trike_y)
+
+    # Get coordinates of the nearest edge
+    node_u = (map_graph.nodes[u]['x'], map_graph.nodes[u]['y'])
+    node_v = (map_graph.nodes[v]['x'], map_graph.nodes[v]['y'])
+
+    # Get distance
+    _, _, dist, nearest_node = get_nearest_intersection(entities.Point(trike_x, trike_y))
+                
+    if dist < tolerance:
+        # print(f"SUCCESS: Trike triggered turn at Node {nearest_node}")
+        return nearest_node
+    else:
+        return None

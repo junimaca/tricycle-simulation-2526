@@ -680,6 +680,15 @@ class Tricycle(Actor):
                 # print(f"Failed to update path for new roam path", flush=True)
                 return None
 
+    def goToNearestIntersection(self):
+        "If tricycle has dropped off a passenger and isn't doing anything, go to the nearest intersection"
+        node_x, node_y, _, _ = get_nearest_intersection(self.curPoint())
+        if self.updatePath(Point(node_x, node_y)):
+            self.updateStatus(TricycleStatus.ROAMING)
+            return True
+        else:
+            return False
+
     ########## Passenger Management Methods ##########
 
     def hasPassenger(self):
