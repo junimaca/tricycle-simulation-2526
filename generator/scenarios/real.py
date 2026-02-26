@@ -478,6 +478,7 @@ class Simulator:
                 dist_tolerance = 0.00001 # ~1.1meters
 
                 nearest_node = check_intersection(trike.curPoint())
+                
                 if nearest_node:
                     trike.turnIntersection()
             
