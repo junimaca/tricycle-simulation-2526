@@ -1,6 +1,6 @@
 import json
 import util
-from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection
+from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection, get_adjacent_intersections
 from enum import Enum
 
 MS_PER_FRAME = 1000
@@ -696,6 +696,14 @@ class Tricycle(Actor):
             return True
         else:
             return False
+
+    def turnIntersection(self, intersection):
+        # For now, code that checks intersection stuff
+        adjacent_neighbors = get_adjacent_intersections(intersection)
+        if self.latest_intersection in adjacent_neighbors:
+            adjacent_neighbors.remove(self.latest_intersection)
+        print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}\n")
+        self.latest_intersection = intersection
 
     ########## Passenger Management Methods ##########
 

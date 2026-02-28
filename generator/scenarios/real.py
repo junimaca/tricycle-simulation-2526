@@ -25,6 +25,7 @@ from scenarios.util import (
     get_valid_points,
     passenger_spawn_major_only,
     build_graph,
+    check_intersection
 )
 
 # TODO: use a logger to make outputting more clean
@@ -473,20 +474,23 @@ class Simulator:
 
             # 3. Detect if in intersection
             for trike in tricycles:
-                dist_tolerance = 0.00001 # ~1.1meters
+                """
+                If trike is currently ROAMING:
+                - check if near intersection
 
-                trike_x = trike.curPoint().x
-                trike_y = trike.curPoint().y
-                nearest_node = ox.distance.nearest_nodes(map_graph, trike_x, trike_y)
-                node_x = map_graph.nodes[nearest_node]['x']
-                node_y = map_graph.nodes[nearest_node]['y']
-                dist = get_euclidean_distance((trike_x, trike_y), (node_x, node_y))
-                # if dist < dist_tolerance:
-                #     if trike.latest_intersection != nearest_node:
-                #         trike.latest_intersection = nearest_node
-                #         print(f'{cur_time[0]}: {dist}')
-                #     else:
-                #         print("wahoo")
+                If near intersection:
+                (ASSUME this detection only triggers ONCE for each instance of a tricycle going to an intersection)
+                1. Check if nearest intersection is the one previously passed through (latest intersection), If True, ignore and move on
+                2. Otherwise, get the list of intersections adjacent to nearest_intersection
+                3. Remove 
+
+                """
+                if trike.status == TricycleStatus.ROAMING:
+                    nearest_node = check_intersection(trike.curPoint())
+                    if nearest_node != None and nearest_node != trike.latest_intersection:
+                        trike.turnIntersection(nearest_node)
+
+                dist_tolerance = 0.00001 # ~1.1meters
 
             # 4. Move tricycles
             for trike in tricycles:
