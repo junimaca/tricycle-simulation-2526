@@ -396,6 +396,8 @@ class Tricycle(Actor):
         self.status = TricycleStatus.ROAMING if isRoaming else TricycleStatus.IDLE
         self.latest_intersection = None # stores NODE ID
         self.bearing = 0.0
+        self.visited_from = {}
+        self.previous_node = None
 
         # initialize metrics
         self.totalDistance = 0
@@ -657,6 +659,80 @@ class Tricycle(Actor):
             return True
         else:
             return False
+
+
+    def get_next_memory_node(self, current_node, adjacent_nodes):
+        '''
+        Memory in order to implement the behavior of a tricycle once at an intersection
+        1. Avoids U-turns (backtracking)
+        2. Avoids roads already taken from this intersection
+        3. Resets and randomly chooses once all roads have been exhausted
+        '''
+        if current_node not in self.visited_from:
+            self.visited_from[current_node] = []
+        
+        '''1. Identify fresh roads
+        we want nodes that havent been visited yet and isnt the previous node (where we just came from)'''
+
+        fresh_options = [
+            n for n in adjacent_nodes
+            if n not in self.visited_from[current_node] and n != self.previous_node]
+        
+        #2.Decision making
+
+        if fresh_options:
+            chosen_node = random.choice(fresh_options)
+            self.visited_from[current_node].append(chosen_node)
+            return chosen_node
+        
+        #3. Reset after all roads chosen
+        # fresh_options is empty, so we reset and choose randomly (try to avoid U-turn)
+
+        #print(f"Trike {self.id}: Visited all roads at {current_node}. Reset memory")
+        self.visited_from[current_node] = []
+
+        random_options = [n for n in adjacent_nodes if n != self.previous_node]
+
+        if not random_options:
+            #dead end
+            random_options = adjacent_nodes
+        
+        chosen_node = random.choice(random_options)
+        self.visited_from[current_node].append(chosen_node)
+        return chosen_node
+    
+    def memoryTurn(self):
+        '''Alternative turnIntersection, detects arrival at intersection and executes memory based turn'''
+
+        #1. detect intersection
+
+        _, _, _, nearest_node = get_nearest_intersection(self.curPoint())
+
+        #2. Trigger once we reach a new Intersection node
+        if nearest_node != self.latest_intersection:
+            adjacent = get_adjacent_intersections(nearest_node)
+
+            if not adjacent:
+                return
+            
+            #3. get next node with memory logic
+            next_dest = self.get_next_memory_node(nearest_node, adjacent)
+
+            #4. convert node id to coordinates and update sim path
+            node_x, node_y = node_id_to_coords(next_dest)
+            new_path = self.updatePath(Point(node_x, node_y), priority='append')
+
+            if new_path:
+                #update state for next turn
+                #node we are at NOW, becomes the previous node for the next step
+                self.previous_node = self.latest_intersection
+                self.latest_intersection = nearest_node
+
+                curr_x, curr_y = node_id_to_coords(nearest_node)
+                self.bearing = ox.bearing.calculate_bearing(curr_y, curr_x, node_y, node_x)
+
+
+
 
     def turnIntersection(self):
         """

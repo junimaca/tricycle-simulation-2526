@@ -480,7 +480,8 @@ class Simulator:
                 nearest_node = check_intersection(trike.curPoint())
                 
                 if nearest_node:
-                    trike.turnIntersection()
+                    #trike.turnIntersection()
+                    trike.memoryTurn()
             
             # 4. Move tricycles
             for trike in tricycles:
