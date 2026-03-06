@@ -442,6 +442,8 @@ class Simulator:
 
             # 1. First detect nearby passengers and plan routes
             for trike in tricycles:
+                p = trike.curPoint()
+                print(f"\n{cur_time[0]}: {p.x}, {p.y}")
                 if not trike.active:
                     continue
                 # Only roaming tricycles should look for passengers on the road
@@ -488,9 +490,14 @@ class Simulator:
                 if trike.status == TricycleStatus.ROAMING:
                     nearest_node = check_intersection(trike.curPoint())
                     if nearest_node != None and nearest_node != trike.latest_intersection:
-                        trike.turnIntersection(nearest_node)
+                        trike.turnIntersection(nearest_node, cur_time[0])
+                    else:
+                        print("STATUS: ROAM ONLY")
+                        print(f"Next destination: {trike.to_go[0]}")
 
-                dist_tolerance = 0.00001 # ~1.1meters
+                    print(f"TO_GO: {trike.to_go}")
+                else:
+                    print("STATUS: NOT ROAMING")
 
             # 4. Move tricycles
             for trike in tricycles:
@@ -558,8 +565,9 @@ class Simulator:
                         else:
                             # print("----Trike didn't move. Attempting to load next cycle point")
                             # Call onCycleComplete before loading next point
-                            trike.onCycleComplete(cur_time[0])
-                            trike.loadNextCyclePoint()
+                            # trike.onCycleComplete(cur_time[0])
+                            # trike.loadNextCyclePoint()
+                            trike.goToNearestIntersection(cur_time[0])
                 except Exception as e:
                     print(f"Encountered error while trying to move tricycle {trike.id}:", e)
                     print(traceback.format_exc())

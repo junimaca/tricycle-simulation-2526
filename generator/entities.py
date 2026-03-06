@@ -1,6 +1,7 @@
 import json
 import util
-from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection, get_adjacent_intersections
+import random
+from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection, get_adjacent_intersections, node_id_to_coords
 from enum import Enum
 
 MS_PER_FRAME = 1000
@@ -452,7 +453,7 @@ class Tricycle(Actor):
             return 0
         
         nxt = self.to_go[0]
-        # print(f"Tricycle {self.id} attempting to move from {cur.toTuple()} to {nxt.toTuple()}", flush=True)
+        print(f"Tricycle {self.id} attempting to move from {cur.toTuple()} to {nxt.toTuple()}", flush=True)
 
         if self.useMeters:
             distRequiredM = util.haversine(*cur.toTuple(), *nxt.toTuple())
@@ -466,12 +467,27 @@ class Tricycle(Actor):
             distTravelledM = 0 if distRequired == 0 else distRequiredM * (distTravelled/distRequired)
 
         if distRequired == 0:
-            # print(f"Tricycle {self.id} reached point {nxt.toTuple()}, removing from to_go", flush=True)
+            print(f"Tricycle {self.id} reached point {nxt.toTuple()}, removing from to_go", flush=True)
             del self.to_go[0]
-            return 0
+            nxt = self.to_go[0]
+
+            # Recompute distances
+            if self.useMeters:
+                distRequiredM = util.haversine(*cur.toTuple(), *nxt.toTuple())
+                distTravelledM = min(distRequiredM, self.speed)
+                distRequired = distRequiredM
+                distTravelled = distTravelledM
+            else:
+                distRequired = util.get_euclidean_distance(cur.toTuple(), nxt.toTuple())
+                distRequiredM = util.haversine(*cur.toTuple(), *nxt.toTuple())
+                distTravelled = min(distRequired, self.speed * MS_PER_FRAME)
+                distTravelledM = 0 if distRequired == 0 else distRequiredM * (distTravelled/distRequired)
+
+            print(f"Now, tricycle {self.id} attempting to move from {cur.toTuple()} to {nxt.toTuple()}", flush=True)
 
         progress = min(distTravelled/distRequired, 1)
         new_point_raw = util.interpolate_points(cur.toTuple(), nxt.toTuple(), progress)
+        print(f"New point: {new_point_raw}")
         self.path.append(Point(*new_point_raw))
 
         # update metrics
@@ -682,8 +698,8 @@ class Tricycle(Actor):
 
     def goToNearestIntersection(self, current_time):
         "If tricycle has dropped off a passenger and isn't doing anything, go to the nearest intersection"
-        node_x, node_y, _, _ = get_nearest_intersection(self.curPoint())
-        if self.updatePath(Point(node_x, node_y)):
+        node_x, node_y, _, id = get_nearest_intersection(self.curPoint())
+        if self.updatePath(Point(node_x, node_y), priority="replace"):
             self.updateStatus(TricycleStatus.ROAMING)
             self.events.append({
                 "type": "NEAREST_INTERSECTION",
@@ -693,17 +709,39 @@ class Tricycle(Actor):
                 "time": current_time,
                 "location": self.curPoint().toTuple()
             })
+            print(f"STATUS: ROAM, RECENT DROPOFF, GO TO INTERSECTION")
+            print(f"Going now to {id} with coords: {node_x}, {node_y}")
+            print(f"New to go: {self.to_go}")
             return True
         else:
             return False
 
-    def turnIntersection(self, intersection):
+    def turnIntersection(self, intersection, current_time):
         # For now, code that checks intersection stuff
         adjacent_neighbors = get_adjacent_intersections(intersection)
-        if self.latest_intersection in adjacent_neighbors:
+        if self.latest_intersection in adjacent_neighbors and len(adjacent_neighbors) != 1:
             adjacent_neighbors.remove(self.latest_intersection)
-        print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}\n")
+        print(f"STATUS: ROAM, GO TO INTERSECTION")
+        print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
         self.latest_intersection = intersection
+
+        next_intersection = random.choice(adjacent_neighbors)
+        print(f"{next_intersection} is chosen")
+        p_x, p_y = node_id_to_coords(next_intersection)
+        print(f"{next_intersection}'s coords: {p_x}, {p_y}")
+
+        self.updateStatus(TricycleStatus.ROAMING)
+        self.events.append({
+            "type": "NEAREST_INTERSECTION",
+            "data": {
+                "intersection": (p_x, p_y)
+            },
+            "time": current_time,
+            "location": self.curPoint().toTuple()
+        })
+        
+        self.updatePath(Point(p_x, p_y), priority="replace")
+        self.to_go.append(Point(p_x, p_y)) # Force snap
 
     ########## Passenger Management Methods ##########
 
@@ -827,6 +865,7 @@ class Tricycle(Actor):
             # Empty tricycle: pick up any nearby passenger (replan route to pickup then destination).
             # Has passengers: only enqueue if new passenger's destination is on the way to current next waypoint.
             empty = len(self.passengers) == 0
+            print(empty)
             dest_en_route = False
             if len(self.to_go) > 0:
                 try:
@@ -836,13 +875,6 @@ class Tricycle(Actor):
                 except util.NoRoute:
                     pass
             allow_enqueue = empty or dest_en_route
-
-            # self.events.append({
-            #     "type": "DECIDE",
-            #     "data": dest_en_route,
-            #     "time": current_time,
-            #     "location": [p.src.x, p.src.y]
-            # })
 
             if allow_enqueue:
                 # Update passenger status to ENQUEUED and claim them
@@ -871,7 +903,7 @@ class Tricycle(Actor):
                         else:
                             self.updateStatus(TricycleStatus.IDLE)
                     else:
-                        # print(f"Enqueued passenger {p.id} at distance {distance:.2f}m", flush=True)
+                        print(f"Enqueued passenger {p.id} at destination {p.dest.x}, {p.dest.y}", flush=True)
                         return p
         return None
     
@@ -1036,7 +1068,7 @@ class Tricycle(Actor):
                 self.passengers = list(filter(lambda x : x.id != p.id, self.passengers))
                 p.onDropoff(current_time, [cur.x, cur.y])
                 dropped.append(p)
-                # print(f"Dropped {p.id} at distance {distance:.2f}m", flush=True)
+                print(f"Dropped {p.id} at distance {distance:.2f}m", flush=True)
             else:
                 # print(f"Tricycle {self.id} is too far ({distance:.2f}m) from {p.id}'s destination to drop off", flush=True)
                 pass
@@ -1199,7 +1231,7 @@ class Tricycle(Actor):
             "id": self.id,
             "type": "trike",
             "speed": self.speed,
-            "roamPath": self.roamPath.toJSON() if self.isRoaming else "None",
+            "roamPath": self.roamPath.toJSON() if self.isRoaming and self.roamPath else "None",
             "isRoaming": self.isRoaming,
             "startX": self.x,
             "startY": self.y,
