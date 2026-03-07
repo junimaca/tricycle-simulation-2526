@@ -453,7 +453,7 @@ class Tricycle(Actor):
             return 0
         
         nxt = self.to_go[0]
-        print(f"Tricycle {self.id} attempting to move from {cur.toTuple()} to {nxt.toTuple()}", flush=True)
+        # print(f"Tricycle {self.id} attempting to move from {cur.toTuple()} to {nxt.toTuple()}", flush=True)
 
         if self.useMeters:
             distRequiredM = util.haversine(*cur.toTuple(), *nxt.toTuple())
@@ -467,7 +467,7 @@ class Tricycle(Actor):
             distTravelledM = 0 if distRequired == 0 else distRequiredM * (distTravelled/distRequired)
 
         if distRequired == 0:
-            print(f"Tricycle {self.id} reached point {nxt.toTuple()}, removing from to_go", flush=True)
+            # print(f"Tricycle {self.id} reached point {nxt.toTuple()}, removing from to_go", flush=True)
             del self.to_go[0]
             nxt = self.to_go[0]
 
@@ -483,11 +483,11 @@ class Tricycle(Actor):
                 distTravelled = min(distRequired, self.speed * MS_PER_FRAME)
                 distTravelledM = 0 if distRequired == 0 else distRequiredM * (distTravelled/distRequired)
 
-            print(f"Now, tricycle {self.id} attempting to move from {cur.toTuple()} to {nxt.toTuple()}", flush=True)
+            # print(f"Now, tricycle {self.id} attempting to move from {cur.toTuple()} to {nxt.toTuple()}", flush=True)
 
         progress = min(distTravelled/distRequired, 1)
         new_point_raw = util.interpolate_points(cur.toTuple(), nxt.toTuple(), progress)
-        print(f"New point: {new_point_raw}")
+        # print(f"New point: {new_point_raw}")
         self.path.append(Point(*new_point_raw))
 
         # update metrics
@@ -707,9 +707,9 @@ class Tricycle(Actor):
             "time": current_time,
             "location": [node_x, node_y]
             })
-            print(f"STATUS: ROAM, RECENT DROPOFF, GO TO INTERSECTION")
-            print(f"Going now to {id} with coords: {node_x}, {node_y}")
-            print(f"New to go: {self.to_go}")
+            # print(f"STATUS: ROAM, RECENT DROPOFF, GO TO INTERSECTION")
+            # print(f"Going now to {id} with coords: {node_x}, {node_y}")
+            # print(f"New to go: {self.to_go}")
             return True
         else:
             return False
@@ -718,14 +718,14 @@ class Tricycle(Actor):
         adjacent_neighbors = get_adjacent_intersections(intersection)
         if self.latest_intersection in adjacent_neighbors and len(adjacent_neighbors) != 1:
             adjacent_neighbors.remove(self.latest_intersection)
-        print(f"STATUS: ROAM, GO TO INTERSECTION")
-        print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
+        # print(f"STATUS: ROAM, GO TO INTERSECTION")
+        # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
         self.latest_intersection = intersection
 
         next_intersection = random.choice(adjacent_neighbors)
-        print(f"{next_intersection} is chosen")
+        # print(f"{next_intersection} is chosen")
         p_x, p_y = node_id_to_coords(next_intersection)
-        print(f"{next_intersection}'s coords: {p_x}, {p_y}")
+        # print(f"{next_intersection}'s coords: {p_x}, {p_y}")
 
         self.updateStatus(TricycleStatus.ROAMING)
         self.events.append({
@@ -860,7 +860,7 @@ class Tricycle(Actor):
             # Empty tricycle: pick up any nearby passenger (replan route to pickup then destination).
             # Has passengers: only enqueue if new passenger's destination is on the way to current next waypoint.
             empty = len(self.passengers) == 0
-            print(empty)
+            # print(empty)
             dest_en_route = False
             if len(self.to_go) > 0:
                 try:
@@ -898,7 +898,7 @@ class Tricycle(Actor):
                         else:
                             self.updateStatus(TricycleStatus.IDLE)
                     else:
-                        print(f"Enqueued passenger {p.id} at destination {p.dest.x}, {p.dest.y}", flush=True)
+                        # print(f"Enqueued passenger {p.id} at destination {p.dest.x}, {p.dest.y}", flush=True)
                         return p
         return None
     

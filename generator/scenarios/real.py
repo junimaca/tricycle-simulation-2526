@@ -443,7 +443,7 @@ class Simulator:
             # 1. First detect nearby passengers and plan routes
             for trike in tricycles:
                 p = trike.curPoint()
-                print(f"\n{cur_time[0]}: {p.x}, {p.y}")
+                # print(f"\n{cur_time[0]}: {p.x}, {p.y}")
                 if not trike.active:
                     continue
                 # Only roaming tricycles should look for passengers on the road
@@ -491,13 +491,13 @@ class Simulator:
                     nearest_node = check_intersection(trike.curPoint())
                     if nearest_node != None and nearest_node != trike.latest_intersection:
                         trike.turnIntersection(nearest_node, cur_time[0])
-                    else:
-                        print("STATUS: ROAM ONLY")
-                        print(f"Next destination: {trike.to_go[0]}")
+                #     else:
+                #         print("STATUS: ROAM ONLY")
+                #         print(f"Next destination: {trike.to_go[0]}")
 
-                    print(f"TO_GO: {trike.to_go}")
-                else:
-                    print("STATUS: NOT ROAMING")
+                #     print(f"TO_GO: {trike.to_go}")
+                # else:
+                #     print("STATUS: NOT ROAMING")
 
             # 4. Move tricycles
             for trike in tricycles:
