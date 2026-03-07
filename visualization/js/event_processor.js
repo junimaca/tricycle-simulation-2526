@@ -446,8 +446,19 @@ export class EventProcessor {
                 this.visualManager.removeEnqueueLine(event.data);
                 this.visualManager.removeDestinationLine(event.data);
                 
+                // Remove the inrersection marker for this passenger
+                const trikeIntMarker = this.visualManager.markers.intersection.get(marker.id);
+                if (trikeIntMarker) {
+                    console.log('Removing intersection marker for ', marker.id);
+                    trikeIntMarker.remove();
+                    this.visualManager.markers.intersection.delete(event.data);
+                } else {
+                    console.log('No intersection marker found for ', marker.id);
+                }
+
                 // Update passenger state
                 marker.passengers.add(event.data);
+                
                 // Remove the appear marker for this passenger
                 const appearMarker = this.visualManager.markers.appear.get(event.data);
                 if (appearMarker) {
@@ -602,6 +613,41 @@ export class EventProcessor {
                     tricycleId: marker.id,
                     newState: 'ENQUEUEING'
                 });
+                break;
+        
+            case "NEAREST_INTERSECTION":
+                // Remove the inrersection marker for this passenger
+                const previousIntMarker = this.visualManager.markers.intersection.get(event.data);
+                if (previousIntMarker) {
+                    console.log('Removing intersection marker for ', marker.id);
+                    previousIntMarker.remove();
+                    this.visualManager.markers.intersection.delete(event.data);
+                } else {
+                    console.log('No intersection marker found for ', marker.id);
+                }
+
+                // Create intersection marker for tricycle
+                const existingIntMarker = this.visualManager.markers.intersection.get(event.data);
+                if (!existingIntMarker) {
+                    console.log(`Creating intersection marker for trike ${marker.id}`);
+                    const intMarker = this.visualManager.createEventMarker(
+                        eventLocation[0],  // latitude
+                        eventLocation[1],  // longitude
+                        `[Frame ${event.time || 0}] ${marker.id}: NEAREST INTERSECTION`,
+                        marker.id
+                    );
+
+                    if (intMarker) {
+                        console.log('Successfully created intersection marker for ', marker.id);
+                        // Add to visual manager
+                        this.visualManager.addMarker('intersection', marker.id, intMarker);
+                    } else {
+                        console.error('Failed to create intersection marker for ', marker.id);
+                    }
+                } else {
+                    console.log(`Intersection marker already exists for ${marker.id}`);
+                }
+
                 break;
         }
         

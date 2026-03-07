@@ -702,12 +702,10 @@ class Tricycle(Actor):
         if self.updatePath(Point(node_x, node_y), priority="replace"):
             self.updateStatus(TricycleStatus.ROAMING)
             self.events.append({
-                "type": "NEAREST_INTERSECTION",
-                "data": {
-                    "intersection": (node_x, node_y)
-                },
-                "time": current_time,
-                "location": self.curPoint().toTuple()
+            "type": "NEAREST_INTERSECTION",
+            "data": self.id,
+            "time": current_time,
+            "location": [node_x, node_y]
             })
             print(f"STATUS: ROAM, RECENT DROPOFF, GO TO INTERSECTION")
             print(f"Going now to {id} with coords: {node_x}, {node_y}")
@@ -717,7 +715,6 @@ class Tricycle(Actor):
             return False
 
     def turnIntersection(self, intersection, current_time):
-        # For now, code that checks intersection stuff
         adjacent_neighbors = get_adjacent_intersections(intersection)
         if self.latest_intersection in adjacent_neighbors and len(adjacent_neighbors) != 1:
             adjacent_neighbors.remove(self.latest_intersection)
@@ -733,11 +730,9 @@ class Tricycle(Actor):
         self.updateStatus(TricycleStatus.ROAMING)
         self.events.append({
             "type": "NEAREST_INTERSECTION",
-            "data": {
-                "intersection": (p_x, p_y)
-            },
+            "data": self.id,
             "time": current_time,
-            "location": self.curPoint().toTuple()
+            "location": [p_x, p_y]
         })
         
         self.updatePath(Point(p_x, p_y), priority="replace")
