@@ -134,6 +134,7 @@ export class VisualManager {
             terminal: new Map(),   // Add terminal markers map
 
             destination: new Map(),  // Add destination markers map
+            intersection: new Map(), // Add intersection markers map
             trikeLines: new Map(),   // Store lines connecting trikes to their destinations
             destinationLines: new Map(),    // Store lines connecting enqueued passengers to their destinations
         };
@@ -824,6 +825,7 @@ export class VisualManager {
         const isEnqueue = message.includes("ENQUEUE") && id.startsWith("passenger");
         const isReset = message.includes("RESET") && id.startsWith("passenger");
         const isPassengerDestination = message.includes("DESTINATION") && id.startsWith("passenger");
+        const isIntersection = message.includes("INTERSECTION");
 
         let markerColor;
         if (isPassengerAppear) {
@@ -840,6 +842,8 @@ export class VisualManager {
             markerColor = 'green';
         } else if (isPassengerDestination) {
             markerColor = 'blue';
+        } else if (isIntersection) {
+            markerColor = 'pink';
         } else {
             markerColor = 'gray';
         }
