@@ -395,7 +395,6 @@ class Tricycle(Actor):
         self.enqueuedPassenger = None  # Track single enqueued passenger
         self.status = TricycleStatus.ROAMING if isRoaming else TricycleStatus.IDLE
         self.latest_intersection = None # stores NODE ID
-        self.bearing = 0.0
 
         # initialize metrics
         self.totalDistance = 0
@@ -672,83 +671,6 @@ class Tricycle(Actor):
             return True
         else:
             return False
-
-    def turnIntersection(self):
-        """
-        Turns the tricycle as it is at the intersection, and updates the latest intersection.
-        We want the tricycle to decide randomly where to go for now, eventually weights will be added
-        to provide a bias towards the forward path.
-
-        Pseudocode:
-        If the nearest intersection is NOT the latest_intersection:
-        - Get the list of adjacent intersections 
-        - Randomly choose neighbor
-        - Update path
-        """
-        _, _, _, nearest_node = get_nearest_intersection(self.curPoint())
-
-        # print(f"excluded intersection {self.latest_intersection}")
-        if nearest_node != self.latest_intersection:
-            # print(f"Replaced intersection: {nearest_node}")
-            adjacent_intersections = get_adjacent_intersections(nearest_node)
-
-            if self.latest_intersection in adjacent_intersections:
-                adjacent_intersections.remove(self.latest_intersection)
-            
-            curr_x, curr_y = node_id_to_coords(nearest_node)
-
-            valid_options = []
-            
-            for neighbor in adjacent_intersections:
-                if neighbor == self.latest_intersection:
-                    continue
-
-                nb_x, nb_y = node_id_to_coords(neighbor)
-                bearing_to_nb = ox.bearing.calculate_bearing(curr_y, curr_x, nb_y, nb_x)
-
-                angle_diff = 180 - abs(abs(self.bearing - bearing_to_nb) - 180)
-
-                if angle_diff < 140:
-                    valid_options.append((neighbor, bearing_to_nb))
-            
-            if valid_options:
-                next_dest, new_bearing = random.choice(valid_options)
-            
-            elif adjacent_intersections:
-                #if only u-turns available
-                next_dest = random.choice(adjacent_intersections)
-                nb_x, nb_y = node_id_to_coords(next_dest)
-                new_bearing = ox.bearing.calculate_bearing(curr_y, curr_x, nb_y, nb_x)
-            
-            else:
-                return
-            
-            node_x, node_y, _, _ = get_nearest_intersection(Point(*node_id_to_coords(next_dest)))
-        
-            new_path = self.updatePath(Point(node_x, node_y), priority='append')
-
-            if new_path:
-                self.latest_intersection = nearest_node
-                self.bearing = new_bearing # Store the heading for the next turn
-                print(f"Tricycle {self.id} turned toward {next_dest} (Heading: {self.bearing:.2f}°)")
-
-
-
-            '''if self.latest_intersection in adjacent_intersections:
-                adjacent_intersections.remove(self.latest_intersection)
-
-            self.latest_intersection = nearest_node    
-            
-            #print(f"Available neighbors: {adjacent_intersections}")
-            if adjacent_intersections:
-                next_dest = random.choice(adjacent_intersections)
-                # print(f"Tricycle turned at next destination: {next_dest}")
-
-                node_x, node_y, _, _ = get_nearest_intersection(Point(*node_id_to_coords(next_dest)))
-                new_path = self.updatePath(Point(node_x, node_y), priority='append')
-
-                if new_path:
-                    self.latest_intersection = nearest_node'''
             
     def newRoamPath(self, current_time: int):
         """
@@ -790,10 +712,10 @@ class Tricycle(Actor):
         if self.updatePath(Point(node_x, node_y), priority="replace"):
             self.updateStatus(TricycleStatus.ROAMING)
             self.events.append({
-            "type": "NEAREST_INTERSECTION",
-            "data": self.id,
-            "time": current_time,
-            "location": [node_x, node_y]
+                "type": "NEAREST_INTERSECTION",
+                "data": self.id,
+                "time": current_time,
+                "location": [node_x, node_y]
             })
             # print(f"STATUS: ROAM, RECENT DROPOFF, GO TO INTERSECTION")
             # print(f"Going now to {id} with coords: {node_x}, {node_y}")
@@ -813,6 +735,58 @@ class Tricycle(Actor):
         next_intersection = random.choice(adjacent_neighbors)
         # print(f"{next_intersection} is chosen")
         p_x, p_y = node_id_to_coords(next_intersection)
+        # print(f"{next_intersection}'s coords: {p_x}, {p_y}")
+
+        self.updateStatus(TricycleStatus.ROAMING)
+        self.events.append({
+            "type": "NEAREST_INTERSECTION",
+            "data": self.id,
+            "time": current_time,
+            "location": [p_x, p_y]
+        })
+        
+        self.updatePath(Point(p_x, p_y), priority="replace")
+        self.to_go.append(Point(p_x, p_y)) # Force snap
+
+    def turnIntersectionWithForwardBias(self, intersection, current_time):
+        adjacent_neighbors = get_adjacent_intersections(intersection)
+        valid_options = list()
+        curr_x, curr_y = node_id_to_coords(intersection)
+        current_bearing = ox.bearing.calculate_bearing(
+            self.path[-2].y, self.path[-2].x,
+            self.path[-1].y, self.path[-1].x,
+        ) if self.path[-2] else 0.0
+
+        # Go through all neighbors
+        for neighbor in adjacent_neighbors:
+
+            # Do not add latest intersection
+            if neighbor == self.latest_intersection:
+                continue
+
+            # Compute bearing from 
+            neighbor_x, neighbor_y = node_id_to_coords(neighbor)
+            bearing_to_neighbor = ox.bearing.calculate_bearing(curr_y, curr_x, neighbor_y, neighbor_x)
+
+            # Compare two bearings; if broadly similar then it is considered forward and is added twice to increase chances of being randomly chosen
+            valid_options.append(neighbor)
+            
+            angle_diff = abs(current_bearing - bearing_to_neighbor)
+            if angle_diff < 20 or angle_diff > 340:
+                valid_options.append(neighbor)    
+        
+        # If no valid options exist, choose one neighbor at randomm
+        if len(valid_options) == 0:
+            next_intersection = random.choice(adjacent_neighbors)
+        else:
+            next_intersection = random.choice(valid_options)
+
+        self.latest_intersection = intersection
+        p_x, p_y = node_id_to_coords(next_intersection)
+
+        # print(f"STATUS: ROAM, GO TO INTERSECTION")
+        # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
+        # print(f"{next_intersection} is chosen")
         # print(f"{next_intersection}'s coords: {p_x}, {p_y}")
 
         self.updateStatus(TricycleStatus.ROAMING)
@@ -1151,7 +1125,7 @@ class Tricycle(Actor):
                 self.passengers = list(filter(lambda x : x.id != p.id, self.passengers))
                 p.onDropoff(current_time, [cur.x, cur.y])
                 dropped.append(p)
-                print(f"Dropped {p.id} at distance {distance:.2f}m", flush=True)
+                # print(f"Dropped {p.id} at distance {distance:.2f}m", flush=True)
             else:
                 # print(f"Tricycle {self.id} is too far ({distance:.2f}m) from {p.id}'s destination to drop off", flush=True)
                 pass
