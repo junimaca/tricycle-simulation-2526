@@ -752,10 +752,18 @@ class Tricycle(Actor):
         adjacent_neighbors = get_adjacent_intersections(intersection)
         valid_options = list()
         curr_x, curr_y = node_id_to_coords(intersection)
-        current_bearing = ox.bearing.calculate_bearing(
-            self.path[-2].y, self.path[-2].x,
-            self.path[-1].y, self.path[-1].x,
-        ) if self.path[-2] else 0.0
+        current_bearing = 0.0
+        penultimate_point = 0.0
+
+        try:
+            penultimate_point = self.path[-2]
+        except NameError:
+            current_bearing = 0.0
+        else:    
+            current_bearing = ox.bearing.calculate_bearing(
+                self.path[-2].y, self.path[-2].x,
+                self.path[-1].y, self.path[-1].x
+            )
 
         # Go through all neighbors
         for neighbor in adjacent_neighbors:
@@ -769,9 +777,12 @@ class Tricycle(Actor):
             bearing_to_neighbor = ox.bearing.calculate_bearing(curr_y, curr_x, neighbor_y, neighbor_x)
 
             # Compare two bearings; if broadly similar then it is considered forward and is added twice to increase chances of being randomly chosen
-            valid_options.append(neighbor)
-            
             angle_diff = abs(current_bearing - bearing_to_neighbor)
+
+            if angle_diff > 160 and angle_diff < 200:
+                continue
+
+            valid_options.append(neighbor)
             if angle_diff < 20 or angle_diff > 340:
                 valid_options.append(neighbor)    
         

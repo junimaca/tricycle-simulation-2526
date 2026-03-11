@@ -12,7 +12,7 @@ from config import KALAYAAN_AVE, MAPAGKAWANGGAWA_ST, MAGINHAWA_ST, MALINGAP_ST
 from config import TOP_LEFT_MAGIN, BOT_RIGHT_MAGIN
 from shapely import get_coordinates
 from shapely.geometry import LineString, Point
-from util import NoRoute, get_euclidean_distance, find_path_between_points_in_osrm
+from util import NoRoute, get_euclidean_distance, find_path_between_points_in_osrm, haversine
 
 major_roads = {
     "Kalayaan Avenue": LineString([(lon, lat) for lat, lon in KALAYAAN_AVE]),
@@ -193,7 +193,7 @@ def get_adjacent_intersections(node_id):
     "Return list of adjacent nodes to node with given node_id"
     return list(map_graph.neighbors(node_id))
 
-def check_intersection(point, tolerance = 0.00005):
+def check_intersection(point, tolerance = 20):
     "Return nearest_node if near an intersection, otherwise return none"
 
     global map_graph
@@ -201,7 +201,9 @@ def check_intersection(point, tolerance = 0.00005):
     trike_y = point.y
 
     # Get distance
-    _, _, dist, nearest_node = get_nearest_intersection(entities.Point(trike_x, trike_y))
+    node_x, node_y, _, nearest_node = get_nearest_intersection(entities.Point(trike_x, trike_y))
+
+    dist = haversine(trike_x, trike_y, node_x, node_y)
                 
     if dist < tolerance:
         # print(f"SUCCESS: Trike triggered turn at Node {nearest_node}")
