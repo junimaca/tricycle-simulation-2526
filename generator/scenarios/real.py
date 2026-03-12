@@ -450,7 +450,8 @@ class Simulator:
                 if trike.isRoaming or trike.status == TricycleStatus.SERVING:
                     p = trike.enqueueNearbyPsgrBetter(cur_time[0])
                     if p:
-                        # print(f"----Detected passenger {p.id} for {trike.id}", flush=True)
+                        print(f"----Detected passenger {p.id} for {trike.id}", flush=True)
+                        print(trike.status)
                         pass
             
             # 2. Handle offloading/loading
@@ -490,7 +491,7 @@ class Simulator:
                 if trike.status == TricycleStatus.ROAMING:
                     nearest_node = check_intersection(trike.curPoint())
                     if nearest_node != None and nearest_node != trike.latest_intersection:
-                        trike.turnIntersectionWithForwardBias(nearest_node, cur_time[0])
+                        trike.turnIntersection(nearest_node, cur_time[0], forward_bias=True)
                 #     else:
                 #         print("STATUS: ROAM ONLY")
                 #         print(f"Next destination: {trike.to_go[0]}")

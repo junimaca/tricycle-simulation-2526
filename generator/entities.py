@@ -724,79 +724,63 @@ class Tricycle(Actor):
         else:
             return False
 
-    def turnIntersection(self, intersection, current_time):
-        adjacent_neighbors = get_adjacent_intersections(intersection)
-        if self.latest_intersection in adjacent_neighbors and len(adjacent_neighbors) != 1:
-            adjacent_neighbors.remove(self.latest_intersection)
-        # print(f"STATUS: ROAM, GO TO INTERSECTION")
-        # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
-        self.latest_intersection = intersection
-
-        next_intersection = random.choice(adjacent_neighbors)
-        # print(f"{next_intersection} is chosen")
-        p_x, p_y = node_id_to_coords(next_intersection)
-        # print(f"{next_intersection}'s coords: {p_x}, {p_y}")
-
-        self.updateStatus(TricycleStatus.ROAMING)
-        self.events.append({
-            "type": "NEAREST_INTERSECTION",
-            "data": self.id,
-            "time": current_time,
-            "location": [p_x, p_y]
-        })
-        
-        self.updatePath(Point(p_x, p_y), priority="replace")
-        self.to_go.append(Point(p_x, p_y)) # Force snap
-
-    def turnIntersectionWithForwardBias(self, intersection, current_time):
+    def turnIntersection(self, intersection, current_time, forward_bias=False):
         adjacent_neighbors = get_adjacent_intersections(intersection)
         valid_options = list()
-        curr_x, curr_y = node_id_to_coords(intersection)
-        current_bearing = 0.0
-        penultimate_point = 0.0
 
-        try:
-            penultimate_point = self.path[-2]
-        except NameError:
+        # With forward bias
+        if forward_bias:
+            curr_x, curr_y = node_id_to_coords(intersection)
             current_bearing = 0.0
-        else:    
-            current_bearing = ox.bearing.calculate_bearing(
-                self.path[-2].y, self.path[-2].x,
-                self.path[-1].y, self.path[-1].x
-            )
 
-        # Go through all neighbors
-        for neighbor in adjacent_neighbors:
+            if len(self.path) >= 2:
+                current_bearing = ox.bearing.calculate_bearing(
+                    self.path[-2].y, self.path[-2].x,
+                    self.path[-1].y, self.path[-1].x
+                )
 
-            # Do not add latest intersection
-            if neighbor == self.latest_intersection:
-                continue
+            # Go through all neighbors
+            for neighbor in adjacent_neighbors:
 
-            # Compute bearing from 
-            neighbor_x, neighbor_y = node_id_to_coords(neighbor)
-            bearing_to_neighbor = ox.bearing.calculate_bearing(curr_y, curr_x, neighbor_y, neighbor_x)
+                # Do not add latest intersection
+                if neighbor == self.latest_intersection:
+                    continue
 
-            # Compare two bearings; if broadly similar then it is considered forward and is added twice to increase chances of being randomly chosen
-            angle_diff = abs(current_bearing - bearing_to_neighbor)
+                # Compute bearing from 
+                neighbor_x, neighbor_y = node_id_to_coords(neighbor)
+                bearing_to_neighbor = ox.bearing.calculate_bearing(curr_y, curr_x, neighbor_y, neighbor_x)
 
-            if angle_diff > 160 and angle_diff < 200:
-                continue
+                # Compare two bearings; if broadly similar then it is considered forward and is added twice to increase chances of being randomly chosen
+                angle_diff = abs(current_bearing - bearing_to_neighbor)
 
-            valid_options.append(neighbor)
-            if angle_diff < 20 or angle_diff > 340:
-                valid_options.append(neighbor)    
-        
+                if angle_diff > 160 and angle_diff < 200:
+                    continue
+
+                valid_options.append(neighbor)
+                if angle_diff < 20 or angle_diff > 340:
+                    valid_options.append(neighbor)  
+
+        # Without forward bias
+        else:
+            for neighbor in adjacent_neighbors:
+                if self.latest_intersection == neighbor:
+                    continue
+                valid_options.append(neighbor)
+
+        # print(f"STATUS: ROAM, GO TO INTERSECTION")
+        # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
+
         # If no valid options exist, choose one neighbor at randomm
         if len(valid_options) == 0:
             next_intersection = random.choice(adjacent_neighbors)
         else:
             next_intersection = random.choice(valid_options)
 
+
         self.latest_intersection = intersection
+        next_intersection = random.choice(adjacent_neighbors)
         p_x, p_y = node_id_to_coords(next_intersection)
 
-        # print(f"STATUS: ROAM, GO TO INTERSECTION")
-        # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
         # print(f"{next_intersection} is chosen")
         # print(f"{next_intersection}'s coords: {p_x}, {p_y}")
 
@@ -1136,7 +1120,7 @@ class Tricycle(Actor):
                 self.passengers = list(filter(lambda x : x.id != p.id, self.passengers))
                 p.onDropoff(current_time, [cur.x, cur.y])
                 dropped.append(p)
-                # print(f"Dropped {p.id} at distance {distance:.2f}m", flush=True)
+                print(f"----Dropped {p.id} at distance {distance:.2f}m", flush=True)
             else:
                 # print(f"Tricycle {self.id} is too far ({distance:.2f}m) from {p.id}'s destination to drop off", flush=True)
                 pass
