@@ -1,7 +1,7 @@
 import json
 import util
 import random
-from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection, get_adjacent_intersections, node_id_to_coords
+from scenarios.util import gen_random_bnf_roam_path, get_nearest_intersection, get_adjacent_intersections, node_id_to_coords, getKeyEdge
 from enum import Enum
 import osmnx as ox
 
@@ -395,6 +395,7 @@ class Tricycle(Actor):
         self.enqueuedPassenger = None  # Track single enqueued passenger
         self.status = TricycleStatus.ROAMING if isRoaming else TricycleStatus.IDLE
         self.latest_intersection = None # stores NODE ID
+        self.visited_edges = [] #edges that the tricycle has traversed so that it doesn't loop back
 
         # initialize metrics
         self.totalDistance = 0
@@ -771,6 +772,23 @@ class Tricycle(Actor):
             # Do not add latest intersection
             if neighbor == self.latest_intersection:
                 continue
+            
+            #get edges and check if we have gone through there before to avoid looping back
+            neighbor_edge = getKeyEdge(neighbor, intersection)
+
+            if neighbor_edge:
+                is_visited = False
+                for edge_id, edge_attributes in neighbor_edge.items():
+
+                    osm_id = edge_attributes.get('osmid')
+
+                    if osm_id in self.visited_edges:
+                        is_visited = True
+                        break
+                    
+                    if is_visited:
+                        continue
+                    
 
             # Compute bearing from 
             neighbor_x, neighbor_y = node_id_to_coords(neighbor)
@@ -794,6 +812,16 @@ class Tricycle(Actor):
 
         self.latest_intersection = intersection
         p_x, p_y = node_id_to_coords(next_intersection)
+
+        #Record visited edge after decision
+        chosen_edge = getKeyEdge(intersection, next_intersection)
+
+        if chosen_edge:
+            for edge_id, attribs in chosen_edge.items():
+                osm_id = attribs.get('osmid')
+
+                if osm_id not in self.visited_edges:
+                    self.visited_edges.append(osm_id)
 
         # print(f"STATUS: ROAM, GO TO INTERSECTION")
         # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
