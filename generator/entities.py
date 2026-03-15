@@ -728,7 +728,7 @@ class Tricycle(Actor):
         adjacent_neighbors = get_adjacent_intersections(intersection)
         valid_options = list()
 
-        # With forward bias
+        # WITH FORWARD BIAS
         if forward_bias:
             curr_x, curr_y = node_id_to_coords(intersection)
             current_bearing = 0.0
@@ -760,7 +760,7 @@ class Tricycle(Actor):
                 if angle_diff < 20 or angle_diff > 340:
                     valid_options.append(neighbor)  
 
-        # Without forward bias
+        # WITHOUT FORWARD BIAS
         else:
             for neighbor in adjacent_neighbors:
                 if self.latest_intersection == neighbor:
@@ -776,9 +776,7 @@ class Tricycle(Actor):
         else:
             next_intersection = random.choice(valid_options)
 
-
         self.latest_intersection = intersection
-        next_intersection = random.choice(adjacent_neighbors)
         p_x, p_y = node_id_to_coords(next_intersection)
 
         # print(f"{next_intersection} is chosen")
@@ -945,7 +943,7 @@ class Tricycle(Actor):
                 # Add pickup point to the front of to_go if not already there
                 if not any(point.x == p.src.x and point.y == p.src.y for point in self.to_go):
                     if not self.updatePath(p.src, priority='front'):
-                        # print(f"Failed to add pickup point for {p.id}", flush=True)
+                        print(f"Failed to add pickup point for {p.id}", flush=True)
                         # If we failed to add the pickup point, reset the passenger
                         p.onReset(current_time, [p.src.x, p.src.y])
                         self.enqueuedPassenger = None
