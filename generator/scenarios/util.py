@@ -212,7 +212,7 @@ def check_intersection(point, tolerance = 20):
         return None
 
 def getKeyEdge(node_id1, node_id2):
-
+    "Return id of edge from node_id1 to node_id2"
     global map_graph
 
     edge_data = map_graph.get_edge_data(node_id1, node_id2)

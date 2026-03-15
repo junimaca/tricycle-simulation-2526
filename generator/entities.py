@@ -742,41 +742,39 @@ class Tricycle(Actor):
 
             # Go through all neighbors
             for neighbor in adjacent_neighbors:
-
-            # Do not add latest intersection
-            if neighbor == self.latest_intersection:
-                continue
-            
-            #get edges and check if we have gone through there before to avoid looping back
-            neighbor_edge = getKeyEdge(neighbor, intersection)
-
-            if neighbor_edge:
-                is_visited = False
-                for edge_id, edge_attributes in neighbor_edge.items():
-
-                    osm_id = edge_attributes.get('osmid')
-
-                    if osm_id in self.visited_edges:
-                        is_visited = True
-                        break
-                    
-                    if is_visited:
-                        continue
-                    
-
-                # Compute bearing from 
-                neighbor_x, neighbor_y = node_id_to_coords(neighbor)
-                bearing_to_neighbor = ox.bearing.calculate_bearing(curr_y, curr_x, neighbor_y, neighbor_x)
-
-                # Compare two bearings; if broadly similar then it is considered forward and is added twice to increase chances of being randomly chosen
-                angle_diff = abs(current_bearing - bearing_to_neighbor)
-
-                if angle_diff > 160 and angle_diff < 200:
+                # Do not add latest intersection
+                if neighbor == self.latest_intersection:
                     continue
+                
+                # Get edges and check if we have gone through there before to avoid looping back
+                neighbor_edge = getKeyEdge(neighbor, intersection)
 
-                valid_options.append(neighbor)
-                if angle_diff < 20 or angle_diff > 340:
-                    valid_options.append(neighbor)  
+                if neighbor_edge:
+                    is_visited = False
+                    for edge_id, edge_attributes in neighbor_edge.items():
+
+                        osm_id = edge_attributes.get('osmid')
+
+                        if osm_id in self.visited_edges:
+                            is_visited = True
+                            break
+                        
+                        if is_visited:
+                            continue
+
+                    # Compute bearing from 
+                    neighbor_x, neighbor_y = node_id_to_coords(neighbor)
+                    bearing_to_neighbor = ox.bearing.calculate_bearing(curr_y, curr_x, neighbor_y, neighbor_x)
+
+                    # Compare two bearings; if broadly similar then it is considered forward and is added twice to increase chances of being randomly chosen
+                    angle_diff = abs(current_bearing - bearing_to_neighbor)
+
+                    if angle_diff > 160 and angle_diff < 200:
+                        continue
+
+                    valid_options.append(neighbor)
+                    if angle_diff < 20 or angle_diff > 340:
+                        valid_options.append(neighbor)  
 
         # WITHOUT FORWARD BIAS
         else:
@@ -1148,7 +1146,7 @@ class Tricycle(Actor):
                 self.passengers = list(filter(lambda x : x.id != p.id, self.passengers))
                 p.onDropoff(current_time, [cur.x, cur.y])
                 dropped.append(p)
-                print(f"----Dropped {p.id} at distance {distance:.2f}m", flush=True)
+                # print(f"----Dropped {p.id} at distance {distance:.2f}m", flush=True)
             else:
                 # print(f"Tricycle {self.id} is too far ({distance:.2f}m) from {p.id}'s destination to drop off", flush=True)
                 pass
