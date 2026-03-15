@@ -210,3 +210,15 @@ def check_intersection(point, tolerance = 20):
         return nearest_node
     else:
         return None
+
+def getKeyEdge(node_id1, node_id2):
+
+    global map_graph
+
+    edge_data = map_graph.get_edge_data(node_id1, node_id2)
+    #return direction A -> B
+    if edge_data:
+        return edge_data
+    else:
+        #otherwise return B-> A
+        return map_graph.get_edge_data(node_id2, node_id1)
