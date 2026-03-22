@@ -725,19 +725,6 @@ class Tricycle(Actor):
         else:
             return False
 
-    # def checkEdges(self, intersection, neighbor) -> bool:
-    #     # Checks if edge id  is in visited edges, returns truth value
-    #     neighbor_edge = getKeyEdge(neighbor, intersection)
-
-    #     if neighbor_edge:
-    #         is_visited = False
-    #         for _, edge_attributes in neighbor_edge.items():
-
-    #             osm_id = edge_attributes.get('osmid')
-
-    #             if osm_id in self.visited_edges:
-    #                 return True
-
     def turnIntersection(self, intersection, current_time, forward_bias=False):
         adjacent_neighbors = get_adjacent_intersections(intersection)
         valid_options = list()
@@ -787,7 +774,17 @@ class Tricycle(Actor):
             for neighbor in adjacent_neighbors:
                 if self.latest_intersection == neighbor:
                     continue
-                valid_options.append(neighbor)
+
+                # Get edges and check if we have gone through there before to avoid looping back
+                neighbor_edge = getKeyEdge(neighbor, intersection)
+
+                if neighbor_edge:
+                    osm_id = neighbor_edge[0]['osmid']
+
+                    if osm_id in self.visited_edges:
+                        continue
+
+                    valid_options.append(neighbor)
 
         # print(f"STATUS: ROAM, GO TO INTERSECTION")
         # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")

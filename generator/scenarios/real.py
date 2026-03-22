@@ -491,7 +491,7 @@ class Simulator:
                 if trike.status == TricycleStatus.ROAMING:
                     nearest_node = check_intersection(trike.curPoint())
                     if nearest_node != None and nearest_node != trike.latest_intersection:
-                        trike.turnIntersection(nearest_node, cur_time[0], forward_bias=True)
+                        trike.turnIntersection(nearest_node, cur_time[0], forward_bias=False)
                 #     else:
                 #         print("STATUS: ROAM ONLY")
                 #         print(f"Next destination: {trike.to_go[0]}")
