@@ -725,6 +725,19 @@ class Tricycle(Actor):
         else:
             return False
 
+    # def checkEdges(self, intersection, neighbor) -> bool:
+    #     # Checks if edge id  is in visited edges, returns truth value
+    #     neighbor_edge = getKeyEdge(neighbor, intersection)
+
+    #     if neighbor_edge:
+    #         is_visited = False
+    #         for _, edge_attributes in neighbor_edge.items():
+
+    #             osm_id = edge_attributes.get('osmid')
+
+    #             if osm_id in self.visited_edges:
+    #                 return True
+
     def turnIntersection(self, intersection, current_time, forward_bias=False):
         adjacent_neighbors = get_adjacent_intersections(intersection)
         valid_options = list()
@@ -750,17 +763,10 @@ class Tricycle(Actor):
                 neighbor_edge = getKeyEdge(neighbor, intersection)
 
                 if neighbor_edge:
-                    is_visited = False
-                    for edge_id, edge_attributes in neighbor_edge.items():
+                    osm_id = neighbor_edge[0]['osmid']
 
-                        osm_id = edge_attributes.get('osmid')
-
-                        if osm_id in self.visited_edges:
-                            is_visited = True
-                            break
-                        
-                        if is_visited:
-                            continue
+                    if osm_id in self.visited_edges:
+                        continue
 
                     # Compute bearing from 
                     neighbor_x, neighbor_y = node_id_to_coords(neighbor)
