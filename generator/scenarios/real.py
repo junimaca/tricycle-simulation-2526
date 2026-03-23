@@ -450,8 +450,8 @@ class Simulator:
                 if trike.isRoaming or trike.status == TricycleStatus.SERVING:
                     p = trike.enqueueNearbyPsgrBetter(cur_time[0])
                     if p:
-                        # print(f"----Detected passenger {p.id} for {trike.id}", flush=True)
-                        # print(trike.status)
+                        print(f"----Detected passenger {p.id} for {trike.id}", flush=True)
+                        print(trike.status)
                         pass
             
             # 2. Handle offloading/loading
@@ -460,13 +460,14 @@ class Simulator:
                     continue
 
                 # Offloading
-                offloaded = list(trike.tryOffload(cur_time[0]))
+                if trike.passengers:
+                    offloaded = list(trike.tryOffload(cur_time[0]))
 
-                for passenger in offloaded:
-                    # print("----Offloaded", passenger.id, trike.id, flush=True)
-                    pass
-                if offloaded:
-                    last_active[0] = cur_time[0]
+                    for passenger in offloaded:
+                        # print("----Offloaded", passenger.id, trike.id, flush=True)
+                        pass
+                    if offloaded:
+                        last_active[0] = cur_time[0]
 
                 # Loading
                 loaded: list[entities.Passenger] = trike.tryLoad(cur_time[0])
