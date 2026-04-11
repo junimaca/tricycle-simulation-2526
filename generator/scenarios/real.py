@@ -15,6 +15,7 @@ import config
 import entities
 import algos
 import osmnx as ox
+import numpy as np
 
 from entities import PassengerStatus, TricycleStatus
 from util import NoRoute, get_euclidean_distance, find_path_between_points_in_osrm
@@ -356,8 +357,81 @@ class Simulator:
         # you will need to modify this
         passenger_id = 0
         passengers: list[entities.Passenger] = []
+        rate = 100
+        spawn_times = [0]
+        spawn_frame = 4000
+        interval = np.random.poisson(lam=rate)
 
-        for _ in range(self.totalPassengers):
+        while True:
+            interval = np.random.poisson(lam=rate)
+            
+            new_spawn_times = spawn_times[-1] + interval
+
+            if new_spawn_times > spawn_frame:
+                break
+            
+            spawn_times.append(new_spawn_times)
+
+            in_terminal = None
+            if random.random() < self.roadPassengerChance:
+                while True:
+                    try:
+                        passenger_source = gen_random_valid_point()
+                        if self.useFixedHotspots:
+                            passenger_dest = random.choice(validFixedHotspots)
+                        else:
+                            passenger_dest = gen_random_valid_point()
+                        find_path_between_points_in_osrm(passenger_source.toTuple(), passenger_dest.toTuple())
+                        break
+                    except Exception:
+                        continue
+                
+                passenger = entities.Passenger(
+                    id=f'passenger_{passenger_id}',
+                    src=passenger_source,
+                    dest=passenger_dest,
+                    createTime=new_spawn_times,
+                    deathTime=-1
+                )
+            else:
+                    # Generate terminal passenger
+                if self.useFixedHotspots:
+                    passenger_dest = random.choice(validFixedHotspots)
+                else:
+                    passenger_dest = gen_random_valid_point()
+                if len(self.terminalPassengerDistrib):
+                    passenger_source = None
+                    x = random.random()
+                    for terminal, chance in zip(terminals, self.terminalPassengerDistrib):
+                        if x < chance:
+                            passenger_source = entities.Point(*terminal.location.toTuple())
+                            in_terminal = terminal
+                            break
+                        else:
+                            x -= chance
+                    
+                    if passenger_source is None:
+                        raise Exception("Improper passenger distribution")
+                else:
+                    in_terminal = random.choice(terminals)
+                    passenger_source = entities.Point(*in_terminal.location.toTuple())
+                
+                passenger = entities.Passenger(
+                    id=f'passenger_{passenger_id}',
+                    src=passenger_source,
+                    dest=passenger_dest,
+                    createTime=new_spawn_times,
+                    deathTime=-1
+                )
+            
+
+            passengers.append(passenger)
+            passenger_id += 1
+
+
+
+
+        '''for _ in range(self.totalPassengers):
             in_terminal = None
             if random.random() < self.roadPassengerChance:
                 # Generate road passenger on the road
@@ -423,7 +497,7 @@ class Simulator:
             # print("Generated {} at {} going to {}".format(passenger.id, passenger_source.toTuple(), passenger_dest.toTuple()), flush=True)
 
             passengers.append(passenger)
-            passenger_id += 1
+            passenger_id += 1'''
         
         # do the actual simulation
         # this is an array to make it a non-primitive object
@@ -439,6 +513,11 @@ class Simulator:
             """
             Each frame is generated here. You can modify the subtleties of the interactions here.
             """
+            #Step 0. Add passengers on the map
+
+            for passenger in passengers:
+                if passenger.createTime == cur_time[0]:
+                    map.addPassenger(passenger)
 
             # 1. First detect nearby passengers and plan routes
             for trike in tricycles:
