@@ -909,6 +909,27 @@ class Tricycle(Actor):
         
         return None
 
+    def getNextStop(self):
+        """
+        Return 'next stop' of the tricycle
+        If len(self.passengers) == 0 - return None
+        len(self.passengers) == 1    - return self.passengers[0].dest
+        len(self.passengers) > 1     - 
+        """
+        if len(self.passengers) == 0:
+            return None 
+        elif len(self.passengers) == 1:
+            return self.passengers[0].dest
+        else:
+            shortest_distance = float('inf')
+            closest_stop = None
+            for passenger in self.passengers:
+                passenger_distance = util.get_route_distance(self.curPoint, passenger.dest)
+                if passenger_distance < shortest_distance:
+                    shortest_distance = passenger_distance
+                    closest_stop = passenger.dest
+            return closest_stop
+
     def enqueueNearbyPsgrBetter(self, current_time: int):
         if not self.map:
             raise Exception("Not backward compatible. Please use a map")
@@ -948,10 +969,10 @@ class Tricycle(Actor):
             empty = len(self.passengers) == 0
             # print(empty)
             dest_en_route = False
-            if len(self.to_go) > 0:
+            if not empty:
                 try:
                     dest_en_route = util.is_en_route(
-                        cur.toTuple(), self.to_go[0].toTuple(), p.dest.toTuple()
+                        cur.toTuple(), self.getNextStop().toTuple(), p.dest.toTuple()
                     )
                 except util.NoRoute:
                     pass

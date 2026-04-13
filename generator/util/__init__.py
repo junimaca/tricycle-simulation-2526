@@ -58,6 +58,36 @@ def find_path_between_points_in_osrm(p1, p2):
         path = [(x, y) for y,x in routes]
         return path
 
+def get_route_distance(p1, p2):
+    """
+    Returns _travel_ distance between two points in OSRM
+
+    Note: It may be possible that there exists no such path. In this case, a NoRoute exception is 
+    raised.
+
+    Parameters:
+    p1 and p2 - (x ,y) tuples describing the coordinates
+
+    Return value:
+    distance - float
+    """
+    
+    x1, y1 = p1
+    x2, y2 = p2
+    
+    # First find the nearest points on the road network
+    x1, y1 = find_nearest_point_in_osrm_path(x1, y1)
+    x2, y2 = find_nearest_point_in_osrm_path(x2, y2)
+    
+    response = requests.get(f'{OSRM_URL}/route/v1/driving/{x1},{y1};{x2},{y2}')
+    data = response.json()
+    
+    if data['code'] == "NoRoute":
+        raise NoRoute
+    else:
+        distance = data['routes'][0]['distance']
+        return distance
+
 def get_random(min, max):
     return min + random.random() * (max - min)
 
