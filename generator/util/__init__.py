@@ -130,10 +130,10 @@ def is_en_route(p1, p2, p3):
 
     """
     Parameters:
-    p1 and p2 - (x ,y) sou
+    p1, p2, p3
 
     Return value:
-    path - [(x1, y1), (x2, y2), ..., (xn, yn)]
+    Boolean: either p3 is between p1 and p2 or not
     """
     
     x1, y1 = p1
@@ -165,4 +165,4 @@ def is_en_route(p1, p2, p3):
     route = LineString([tuple(coord) for coord in route_coords])
     p = Point(x3, y3)
     
-    return route.distance(p) < 0.0001 # ~11 meters
+    return route.distance(p) < 0.0003 # ~33 meters

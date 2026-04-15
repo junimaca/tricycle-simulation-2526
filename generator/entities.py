@@ -971,12 +971,22 @@ class Tricycle(Actor):
             dest_en_route = False
             if not empty:
                 try:
+                    # print(f"No of psgrs: {len(self.passengers)}. Next stop: {self.getNextStop()}")
                     dest_en_route = util.is_en_route(
                         cur.toTuple(), self.getNextStop().toTuple(), p.dest.toTuple()
                     )
                 except util.NoRoute:
                     pass
             allow_enqueue = empty or dest_en_route
+
+            # if dest_en_route:
+            #     self.events.append({
+            #         "type": "EN_ROUTE",
+            #         "data": p.id,
+            #         "time": current_time,
+            #         "location": [p.src.x, p.src.y]
+            #     })
+            #     print(f"en route in {current_time}")
 
             if allow_enqueue:
                 # Update passenger status to ENQUEUED and claim them
