@@ -529,8 +529,8 @@ class Simulator:
                 if trike.isRoaming or trike.status == TricycleStatus.SERVING:
                     p = trike.enqueueNearbyPsgrBetter(cur_time[0])
                     if p:
-                        print(f"----Detected passenger {p.id} for {trike.id}", flush=True)
-                        print(trike.status)
+                        # print(f"----Detected passenger {p.id} for {trike.id}", flush=True)
+                        # print(trike.status)
                         pass
             
             # 2. Handle offloading/loading

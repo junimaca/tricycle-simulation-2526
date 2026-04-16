@@ -58,6 +58,37 @@ def find_path_between_points_in_osrm(p1, p2):
         path = [(x, y) for y,x in routes]
         return path
 
+def get_route_distance(p1, p2):
+    """
+    Returns _travel_ distance between two points in OSRM
+
+    Note: It may be possible that there exists no such path. In this case, a NoRoute exception is 
+    raised.
+
+    Parameters:
+    p1 and p2 - (x ,y) tuples describing the coordinates
+
+    Return value:
+    distance - float
+    """
+    
+    # print(p1)
+    x1, y1 = p1
+    x2, y2 = p2
+    
+    # First find the nearest points on the road network
+    x1, y1 = find_nearest_point_in_osrm_path(x1, y1)
+    x2, y2 = find_nearest_point_in_osrm_path(x2, y2)
+    
+    response = requests.get(f'{OSRM_URL}/route/v1/driving/{x1},{y1};{x2},{y2}')
+    data = response.json()
+    
+    if data['code'] == "NoRoute":
+        raise NoRoute
+    else:
+        distance = data['routes'][0]['distance']
+        return distance
+
 def get_random(min, max):
     return min + random.random() * (max - min)
 
@@ -100,10 +131,10 @@ def is_en_route(p1, p2, p3):
 
     """
     Parameters:
-    p1 and p2 - (x ,y) sou
+    p1, p2, p3
 
     Return value:
-    path - [(x1, y1), (x2, y2), ..., (xn, yn)]
+    Boolean: either p3 is between p1 and p2 or not
     """
     
     x1, y1 = p1
@@ -135,4 +166,26 @@ def is_en_route(p1, p2, p3):
     route = LineString([tuple(coord) for coord in route_coords])
     p = Point(x3, y3)
     
-    return route.distance(p) < 0.0001 # ~11 meters
+    return route.distance(p) < 0.0003 # ~33 meters
+
+def calculate_angle_3_points(p1, p2, p3):
+    """
+    Calculates the angle at p2 (the vertex) formed by points p1 and p3.
+
+    Paramaters:
+    a1, a2, a3: arrays
+
+    Return value:
+    Angle in degrees as float
+    """
+
+    v1 = (p1[0] - p2[0], p1[1] - p2[1])
+    v2 = (p3[0] - p2[0], p3[1] - p2[1])
+    
+    # Calculate angles of each vector relative to the X-axis
+    angle1 = math.atan2(v1[1], v1[0])
+    angle2 = math.atan2(v2[1], v2[0])
+    
+    # Subtract to get the difference
+    angle = math.degrees(angle2 - angle1)
+    return (angle + 360) % 360
