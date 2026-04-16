@@ -45,36 +45,36 @@ export class EventProcessor {
             this.stateManager.setPassengers(passengers);
 
             // Initialize passengers
-            passengers.forEach(passenger => {
-                console.log('Creating marker for passenger:', passenger.id, 'src:', passenger.src);
-                console.log('Passenger:', passenger);
+            // passengers.forEach(passenger => {
+            //     console.log('Creating marker for passenger:', passenger.id, 'src:', passenger.src);
+            //     console.log('Passenger:', passenger);
                 
-                // Convert coordinates using utility function
-                const coords = pointsToRaw(passenger.src);
-                if (!coords) {
-                    console.error('Failed to convert coordinates for passenger:', passenger.id);
-                    return;
-                }
+            //     // Convert coordinates using utility function
+            //     const coords = pointsToRaw(passenger.src);
+            //     if (!coords) {
+            //         console.error('Failed to convert coordinates for passenger:', passenger.id);
+            //         return;
+            //     }
                 
-                console.log('Converted coordinates:', coords);
-                const marker = this.visualManager.createEventMarker(
-                    coords[0],  // latitude
-                    coords[1],  // longitude
-                    `[Frame ${event.time || 0}] ${passenger.id}: APPEAR`,
-                    passenger.id
-                );
+            //     console.log('Converted coordinates:', coords);
+            //     const marker = this.visualManager.createEventMarker(
+            //         coords[0],  // latitude
+            //         coords[1],  // longitude
+            //         `[Frame ${event.time || 0}] ${passenger.id}: APPEAR`,
+            //         passenger.id
+            //     );
                 
-                if (marker) {
-                    console.log('Successfully created marker for passenger:', passenger.id);
-                    // Add to visual manager
-                    this.visualManager.addMarker('appear', passenger.id, marker);
+            //     if (marker) {
+            //         console.log('Successfully created marker for passenger:', passenger.id);
+            //         // Add to visual manager
+            //         this.visualManager.addMarker('appear', passenger.id, marker);
                     
-                    // Update state
-                    this.stateManager.updatePassengerState(passenger.id, 'WAITING');
-                } else {
-                    console.error('Failed to create marker for passenger:', passenger.id);
-                }
-            });
+            //         // Update state
+            //         this.stateManager.updatePassengerState(passenger.id, 'WAITING');
+            //     } else {
+            //         console.error('Failed to create marker for passenger:', passenger.id);
+            //     }
+            // });
 
             // Initialize trikes
             trikes.forEach(trike => {
@@ -735,7 +735,7 @@ export class EventProcessor {
                             event.data  // Use passenger ID as data
                         );
                     } else if (event.type === "APPEAR") {
-                        // console.log('Logging APPEAR event for:', marker.id);
+                        console.log('Logging APPEAR event for:', marker.id);
                         // Log appear events with the entity's ID
                         this.visualManager.logEvent(
                             timestamp,
@@ -764,6 +764,42 @@ export class EventProcessor {
                     // console.log('Skipping past event');
                     // Skip past events
                     marker.currentEventIndex++;
+                }
+            }
+        });
+    }
+
+    checkPassengerAppearances(timestamp) {
+        const passengers = this.stateManager.getAllPassengers();
+        // console.log(timestamp);
+        // console.log(passengers);
+
+        passengers.forEach(passenger => {
+            if (passenger.hasAppeared) return;
+
+            if (passenger.createTime <= timestamp) {
+                const coords = pointsToRaw(passenger.src);
+                if (!coords) return;
+
+                const marker = this.visualManager.createEventMarker(
+                    coords[0],
+                    coords[1],
+                    `[Frame ${timestamp}] ${passenger.id}: APPEAR`,
+                    passenger.id
+                );
+
+                if (marker) {
+                    this.visualManager.addMarker('appear', passenger.id, marker);
+                    this.stateManager.updatePassengerState(passenger.id, 'WAITING');
+
+                    // Mark as spawned so it doesn't repeat
+                    passenger.hasAppeared = true;
+
+                    this.visualManager.logEvent(
+                        timestamp,
+                        passenger.id,
+                        "APPEAR",
+                    );
                 }
             }
         });

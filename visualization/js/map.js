@@ -99,6 +99,7 @@ function simulationTick() {
     // Check and process trike events for this frame
     if (window.eventProcessor) {
         window.eventProcessor.checkTrikeEvents(currentFrame);
+        window.eventProcessor.checkPassengerAppearances(currentFrame);
     }
     
     // Use requestAnimationFrame for smoother animation
@@ -164,7 +165,7 @@ export async function show_real(id, t, p) {
                         id: p.id,
                         src: p.src,
                         dest: p.dest,
-                        createTime: p.createTime * TIMING_CONFIG.frameDuration,
+                        createTime: p.createTime,
                         deathTime: p.deathTime !== -1 ? p.deathTime * TIMING_CONFIG.frameDuration : Infinity,
                         events: p.events
                     };
@@ -227,8 +228,19 @@ function initializeUI() {
 // generator/data/real/3-2-20-yxjmsvodgtww
 
 // Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initializeUI();
+
+    const id = DEFAULT_SIMULATION.id;
+
+    // ✅ Get total passengers from metadata
+    const metadataResponse = await fetch(API_ENDPOINTS.metadata(id));
+    const metadata = await metadataResponse.json();
+
+    const totalPassengers = metadata.totalPassengers;
+
+    console.log("Total passengers from metadata:", totalPassengers);
+
     show_real(DEFAULT_SIMULATION.id, DEFAULT_SIMULATION.trikes, DEFAULT_SIMULATION.passengers);
 });
 

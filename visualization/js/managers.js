@@ -37,9 +37,18 @@ export class StateManager {
         return this.passengers.get(passengerId) ?? null;
     }
 
+    getAllPassengers() {
+        return Array.from(this.passengers.values());
+    }
+
     setPassengers(passengerList) {
         this.passengers.clear();
-        passengerList.forEach(p => this.passengers.set(p.id, p));
+        passengerList.forEach(p => {
+            this.passengers.set(p.id, {
+                ...p,              
+                hasAppeared: false,
+            });
+        });
     }
 
     updatePassengerState(passengerId, newState) {

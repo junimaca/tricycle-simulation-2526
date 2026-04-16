@@ -39,4 +39,4 @@ if __name__ == '__main__':
     )
     for _ in range(TEST_COUNT):
         seed = random.randint(0, 10**9)
-        simulator.run(maxTime=MAX_TIME, fixedHotspots=config.MAGIN_HOTSPOTS, fixedTerminals=config.MAGIN_TERMINALS, seed=seed)
+        simulator.run(maxTime=MAX_TIME, fixedHotspots=config.MAGIN_HOTSPOTS, fixedTerminals=config.MAGIN_TERMINALS, seed=119936740)

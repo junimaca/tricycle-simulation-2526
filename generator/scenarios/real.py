@@ -357,7 +357,7 @@ class Simulator:
         # you will need to modify this
         passenger_id = 0
         passengers: list[entities.Passenger] = []
-        rate = 100
+        rate = 40
         spawn_times = [0]
         spawn_frame = 4000
         interval = np.random.poisson(lam=rate)
@@ -731,7 +731,7 @@ class Simulator:
             "simulation_parameters": {
                 "total_trikes": self.totalTrikes,
                 "total_terminals": self.totalTerminals,
-                "total_passengers": self.totalPassengers,
+                "total_passengers": len(passengers),
                 "use_smart_scheduler": self.useSmartScheduler,
                 "trike_capacity": self.trikeConfig["capacity"],
                 "is_realistic": self.isRealistic,
@@ -751,6 +751,7 @@ class Simulator:
 
         last_active[0] += 1 if self.isRealistic else entities.MS_PER_FRAME
 
+        run_metadata["totalPassengers"] = len(passengers)
         run_metadata["endTime"] = cur_time
         run_metadata["elapsedTime"] = elapsed_time
         run_metadata["lastActivityTime"] = last_active[0]

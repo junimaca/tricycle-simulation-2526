@@ -144,6 +144,10 @@
     border-left-color: #00BCD4;
 }
 
+.event-log-entry[data-event-type="NEAREST_INTERSECTION"] {
+    border-left-color: #ff00ff;
+}
+
 /* Status Panels Common Styles */
 #passengerStatus, #tricycleStatus {
     height: 100%;
