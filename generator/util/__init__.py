@@ -72,6 +72,7 @@ def get_route_distance(p1, p2):
     distance - float
     """
     
+    # print(p1)
     x1, y1 = p1
     x2, y2 = p2
     
@@ -166,3 +167,25 @@ def is_en_route(p1, p2, p3):
     p = Point(x3, y3)
     
     return route.distance(p) < 0.0003 # ~33 meters
+
+def calculate_angle_3_points(p1, p2, p3):
+    """
+    Calculates the angle at p2 (the vertex) formed by points p1 and p3.
+
+    Paramaters:
+    a1, a2, a3: arrays
+
+    Return value:
+    Angle in degrees as float
+    """
+
+    v1 = (p1[0] - p2[0], p1[1] - p2[1])
+    v2 = (p3[0] - p2[0], p3[1] - p2[1])
+    
+    # Calculate angles of each vector relative to the X-axis
+    angle1 = math.atan2(v1[1], v1[0])
+    angle2 = math.atan2(v2[1], v2[0])
+    
+    # Subtract to get the difference
+    angle = math.degrees(angle2 - angle1)
+    return (angle + 360) % 360

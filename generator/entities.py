@@ -924,7 +924,7 @@ class Tricycle(Actor):
             shortest_distance = float('inf')
             closest_stop = None
             for passenger in self.passengers:
-                passenger_distance = util.get_route_distance(self.curPoint, passenger.dest)
+                passenger_distance = util.get_route_distance(self.curPoint().toTuple(), passenger.dest.toTuple())
                 if passenger_distance < shortest_distance:
                     shortest_distance = passenger_distance
                     closest_stop = passenger.dest
@@ -968,15 +968,28 @@ class Tricycle(Actor):
             # Has passengers: only enqueue if new passenger's destination is on the way to current next waypoint.
             empty = len(self.passengers) == 0
             # print(empty)
+
             dest_en_route = False
             if not empty:
                 try:
                     # print(f"No of psgrs: {len(self.passengers)}. Next stop: {self.getNextStop()}")
+
+                    # CASE 1 - Potential passenger's destination is between tricycle and loaded passenger's destination 
                     dest_en_route = util.is_en_route(
                         cur.toTuple(), self.getNextStop().toTuple(), p.dest.toTuple()
                     )
+                    # CASE 2 - Potential passenger's destination is beyond the  loaded passenger's destination, relative to the tricycle
+                    if not dest_en_route:
+                        angle = util.calculate_angle_3_points(cur.toTuple(), self.getNextStop().toTuple(), p.dest.toTuple())
+                        if angle > 90 and angle < 270:
+                            dest_en_route = util.is_en_route(
+                                cur.toTuple(), p.dest.toTuple(), self.getNextStop().toTuple()
+                            )
+
                 except util.NoRoute:
                     pass
+
+            # Only enqueue if empty or if picking up new passenger is not "inconvenient"
             allow_enqueue = empty or dest_en_route
 
             # if dest_en_route:
