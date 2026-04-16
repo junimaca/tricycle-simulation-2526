@@ -136,7 +136,6 @@ class Simulator:
         self.useFixedTerminals = useFixedTerminals
         self.useFixedHotspots = useFixedHotspots
         self.useSmartScheduler = useSmartScheduler
-        self.prefix = '-'.join([str(x) for x in [totalTrikes, totalTerminals, totalPassengers]])
         self.isRealistic = isRealistic
 
         # ensure that there are non-negative count of entities
@@ -195,9 +194,8 @@ class Simulator:
 
         global cache
 
-        run_id = f'{self.prefix}-{generate_random_filename()}'
         run_metadata = {
-            "id": run_id,
+            "id": "",
             "seed": seed,
             "maxTime": maxTime,
             "totalTrikes": self.totalTrikes,
@@ -220,7 +218,6 @@ class Simulator:
         if seed is not None:
             random.seed(seed)
         
-        print(f"Running with the following metadata:", run_metadata, flush=True)
         start_time = time.time()
 
         if self.hotspotsCache:
@@ -229,10 +226,6 @@ class Simulator:
             validFixedHotspots = get_valid_points(fixedHotspots)
             self.hotspotsCache = validFixedHotspots
             cache = validFixedHotspots
-
-        # Generate data files
-        if not os.path.exists(f"data/real/{run_id}"):
-            os.makedirs(f"data/real/{run_id}")
         
         # Setup a new map
         map = entities.Map(
@@ -428,8 +421,18 @@ class Simulator:
             passengers.append(passenger)
             passenger_id += 1
 
+        # Print metadata. Update to reflect final passenger count
+        self.totalPassengers = len(passengers)
+        run_metadata["totalPassengers"] = len(passengers)
+        self.prefix = '-'.join([str(x) for x in [self.totalTrikes, self.totalTerminals, self.totalPassengers]])
+        run_id = f'{self.prefix}-{generate_random_filename()}'
+        run_metadata["id"] = run_id
 
+        print(f"Running with the following metadata:", run_metadata, flush=True)
 
+        # Generate data files
+        if not os.path.exists(f"data/real/{run_id}"):
+            os.makedirs(f"data/real/{run_id}")
 
         '''for _ in range(self.totalPassengers):
             in_terminal = None
@@ -731,7 +734,7 @@ class Simulator:
             "simulation_parameters": {
                 "total_trikes": self.totalTrikes,
                 "total_terminals": self.totalTerminals,
-                "total_passengers": len(passengers),
+                "total_passengers": self.totalPassengers,
                 "use_smart_scheduler": self.useSmartScheduler,
                 "trike_capacity": self.trikeConfig["capacity"],
                 "is_realistic": self.isRealistic,
@@ -751,7 +754,6 @@ class Simulator:
 
         last_active[0] += 1 if self.isRealistic else entities.MS_PER_FRAME
 
-        run_metadata["totalPassengers"] = len(passengers)
         run_metadata["endTime"] = cur_time
         run_metadata["elapsedTime"] = elapsed_time
         run_metadata["lastActivityTime"] = last_active[0]
