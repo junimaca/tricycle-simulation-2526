@@ -93,7 +93,8 @@ class Simulator:
             useSmartScheduler = True,
             trikeCapacity = None,
             isRealistic = False,
-            enqueue_radius_meters = None
+            enqueue_radius_meters = None,
+            passengerSpawnRates = [[80]]
         ):
         """
         Parameters:
@@ -122,6 +123,7 @@ class Simulator:
         - trikeCapacity: int - the number of passengers tricycles can accommodate at a moment
         - isRealistic: bool - always set this to True, unless you want to deal with great circle coordinate system
         - enqueue_radius_meters: float - the radius for enqueueing when not serving passengers
+        - passengerSpawnRates: list[int][int] - 2-dimensional array of passenger spawn rates across the map
         """
         self.totalTrikes = totalTrikes
         self.totalTerminals = totalTerminals
@@ -137,6 +139,7 @@ class Simulator:
         self.useFixedHotspots = useFixedHotspots
         self.useSmartScheduler = useSmartScheduler
         self.isRealistic = isRealistic
+        self.passengerSpawnRates = passengerSpawnRates
 
         # ensure that there are non-negative count of entities
         if self.totalTerminals < 0:
@@ -350,76 +353,86 @@ class Simulator:
         # you will need to modify this
         passenger_id = 0
         passengers: list[entities.Passenger] = []
-        rate = 40
+        rate = 80
         spawn_times = [0]
         spawn_frame = 4000
+        spawn_limit = 4000
         interval = np.random.poisson(lam=rate)
 
-        while True:
-            interval = np.random.poisson(lam=rate)
-            
-            new_spawn_times = spawn_times[-1] + interval
+        rows = len(self.passengerSpawnRates)
+        cols = len(self.passengerSpawnRates[0])
 
-            if new_spawn_times > spawn_frame:
-                break
-            
-            spawn_times.append(new_spawn_times)
+        for i in range(rows):
+            for j in range(cols):
+                current_spawn_time = 0
+                new_top_left = [config.TOP_LEFT_Y - (i * config.LEN_Y / rows), config.TOP_LEFT_X + (j * config.LEN_X / cols)]
+                new_bot_right = [config.TOP_LEFT_Y - ((i + 1) * config.LEN_Y / rows), config.TOP_LEFT_X + ((j + 1) * config.LEN_X / cols)]
+                current_rate = self.passengerSpawnRates[i][j]
 
-            in_terminal = None
-            if random.random() < self.roadPassengerChance:
                 while True:
-                    try:
-                        passenger_source = gen_random_valid_point()
+                    interval = np.random.poisson(lam=current_rate)
+                    current_spawn_time = current_spawn_time + interval
+                    print(interval)
+
+                    if current_spawn_time > spawn_frame:
+                        break
+                    
+                    in_terminal = None
+                    
+                    if random.random() < self.roadPassengerChance:
+                        while True:
+                            try:
+                                passenger_source = gen_random_valid_point(top_left=new_top_left, bot_right=new_bot_right)
+                                if self.useFixedHotspots:
+                                    passenger_dest = random.choice(validFixedHotspots)
+                                else:
+                                    passenger_dest = gen_random_valid_point()
+                                find_path_between_points_in_osrm(passenger_source.toTuple(), passenger_dest.toTuple())
+                                break
+                            except Exception:
+
+                                continue
+                        
+                        passenger = entities.Passenger(
+                            id=f'passenger_{passenger_id}',
+                            src=passenger_source,
+                            dest=passenger_dest,
+                            createTime=current_spawn_time,
+                            deathTime=-1
+                        )
+                    else:
+                        # Generate terminal passenger
                         if self.useFixedHotspots:
                             passenger_dest = random.choice(validFixedHotspots)
                         else:
                             passenger_dest = gen_random_valid_point()
-                        find_path_between_points_in_osrm(passenger_source.toTuple(), passenger_dest.toTuple())
-                        break
-                    except Exception:
-                        continue
-                
-                passenger = entities.Passenger(
-                    id=f'passenger_{passenger_id}',
-                    src=passenger_source,
-                    dest=passenger_dest,
-                    createTime=new_spawn_times,
-                    deathTime=-1
-                )
-            else:
-                    # Generate terminal passenger
-                if self.useFixedHotspots:
-                    passenger_dest = random.choice(validFixedHotspots)
-                else:
-                    passenger_dest = gen_random_valid_point()
-                if len(self.terminalPassengerDistrib):
-                    passenger_source = None
-                    x = random.random()
-                    for terminal, chance in zip(terminals, self.terminalPassengerDistrib):
-                        if x < chance:
-                            passenger_source = entities.Point(*terminal.location.toTuple())
-                            in_terminal = terminal
-                            break
+                        if len(self.terminalPassengerDistrib):
+                            passenger_source = None
+                            x = random.random()
+                            for terminal, chance in zip(terminals, self.terminalPassengerDistrib):
+                                if x < chance:
+                                    passenger_source = entities.Point(*terminal.location.toTuple())
+                                    in_terminal = terminal
+                                    break
+                                else:
+                                    x -= chance
+                            
+                            if passenger_source is None:
+                                raise Exception("Improper passenger distribution")
                         else:
-                            x -= chance
+                            in_terminal = random.choice(terminals)
+                            passenger_source = entities.Point(*in_terminal.location.toTuple())
+                        
+                        passenger = entities.Passenger(
+                            id=f'passenger_{passenger_id}',
+                            src=passenger_source,
+                            dest=passenger_dest,
+                            createTime=new_spawn_time,
+                            deathTime=-1
+                        )
                     
-                    if passenger_source is None:
-                        raise Exception("Improper passenger distribution")
-                else:
-                    in_terminal = random.choice(terminals)
-                    passenger_source = entities.Point(*in_terminal.location.toTuple())
-                
-                passenger = entities.Passenger(
-                    id=f'passenger_{passenger_id}',
-                    src=passenger_source,
-                    dest=passenger_dest,
-                    createTime=new_spawn_times,
-                    deathTime=-1
-                )
-            
-
-            passengers.append(passenger)
-            passenger_id += 1
+                    passengers.append(passenger)
+                    passenger_id += 1
 
         # Print metadata. Update to reflect final passenger count
         self.totalPassengers = len(passengers)

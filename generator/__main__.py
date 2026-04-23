@@ -9,6 +9,8 @@ if __name__ == '__main__':
     NUM_PASSENGERS = 20
     MAX_TIME = 5_000
     TEST_COUNT = 1
+    LAMBDAS = [[240, 1000],
+               [120, 240]]
     
     # Simulation parameters
     S_ENQUEUE_RADIUS_METERS = 20  # Radius for enqueueing when tricycle is serving passengers
@@ -35,7 +37,9 @@ if __name__ == '__main__':
         useFixedTerminals=False, # only use if you have setup hotspots in config
         useSmartScheduler=True,
         trikeConfig=trike_config,
-        isRealistic=True # always set to true
+        isRealistic=True, # always set to true
+        passengerSpawnRates = LAMBDAS
+
     )
     for _ in range(TEST_COUNT):
         seed = random.randint(0, 10**9)

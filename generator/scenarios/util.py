@@ -41,17 +41,17 @@ def build_graph(tolerance = 0.001):
 def get_random(min, max):
     return min + random.random() * (max - min)
 
-def gen_random_point():
+def gen_random_point(top_left = TOP_LEFT_MAGIN, bot_right = BOT_RIGHT_MAGIN):
     "Returns a random point in the map. It is likely you will NOT be using this directly."
 
-    x = util.get_random(config.TOP_LEFT_X, config.BOT_RIGHT_X)
-    y = util.get_random(config.BOT_RIGHT_Y, config.TOP_LEFT_Y)
+    x = util.get_random(top_left[1], bot_right[1])
+    y = util.get_random(top_left[0], bot_right[0])
     return entities.Point(x, y)
 
-def gen_random_valid_point():
+def gen_random_valid_point(top_left = TOP_LEFT_MAGIN, bot_right = BOT_RIGHT_MAGIN):
     "Returns a random point in the map that is on the road"
 
-    point_raw = gen_random_point()
+    point_raw = gen_random_point(top_left, bot_right)
     point = entities.Point(*util.find_nearest_point_in_osrm_path(point_raw.x, point_raw.y))
     return point
 
