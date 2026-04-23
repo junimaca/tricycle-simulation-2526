@@ -353,11 +353,7 @@ class Simulator:
         # you will need to modify this
         passenger_id = 0
         passengers: list[entities.Passenger] = []
-        rate = 80
-        spawn_times = [0]
-        spawn_frame = 4000
         spawn_limit = 4000
-        interval = np.random.poisson(lam=rate)
 
         rows = len(self.passengerSpawnRates)
         cols = len(self.passengerSpawnRates[0])
@@ -365,16 +361,15 @@ class Simulator:
         for i in range(rows):
             for j in range(cols):
                 current_spawn_time = 0
-                new_top_left = [config.TOP_LEFT_Y - (i * config.LEN_Y / rows), config.TOP_LEFT_X + (j * config.LEN_X / cols)]
+                new_top_left  = [config.TOP_LEFT_Y - (i * config.LEN_Y / rows),       config.TOP_LEFT_X + (j * config.LEN_X / cols)]
                 new_bot_right = [config.TOP_LEFT_Y - ((i + 1) * config.LEN_Y / rows), config.TOP_LEFT_X + ((j + 1) * config.LEN_X / cols)]
                 current_rate = self.passengerSpawnRates[i][j]
 
                 while True:
                     interval = np.random.poisson(lam=current_rate)
                     current_spawn_time = current_spawn_time + interval
-                    print(interval)
 
-                    if current_spawn_time > spawn_frame:
+                    if current_spawn_time > spawn_limit:
                         break
                     
                     in_terminal = None
