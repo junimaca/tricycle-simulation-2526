@@ -55,6 +55,16 @@ def gen_random_valid_point(top_left = TOP_LEFT_MAGIN, bot_right = BOT_RIGHT_MAGI
     point = entities.Point(*util.find_nearest_point_in_osrm_path(point_raw.x, point_raw.y))
     return point
 
+def gen_random_valid_point_except(top_left, bot_right):
+    "Returns a random point in the map that is on the road that is NOT in the box determined by top_left and bot_right"
+
+    while True:
+        point_raw = gen_random_point()
+        point = entities.Point(*util.find_nearest_point_in_osrm_path(point_raw.x, point_raw.y))
+        if not (bot_right[0] <= point.y <= top_left[y] and top_left[1] <= point.x <= bot_right[1]):
+            break
+    return point
+
 def get_valid_points(points):
     "Returns a list of valid points based on provided list. Each point in the list must be in (y,x)"
     return [entities.Point(*util.find_nearest_point_in_osrm_path(p[1], p[0])) for p in points]

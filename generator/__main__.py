@@ -9,8 +9,8 @@ if __name__ == '__main__':
     NUM_PASSENGERS = 20
     MAX_TIME = 5_000
     TEST_COUNT = 1
-    LAMBDAS = [[240, 1000],
-               [1200, 240]]
+    LAMBDAS = [[10000000, 10000000],
+               [10000000, 60]]
     
     # Simulation parameters
     S_ENQUEUE_RADIUS_METERS = 20  # Radius for enqueueing when tricycle is serving passengers
