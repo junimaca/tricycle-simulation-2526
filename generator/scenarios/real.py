@@ -379,10 +379,12 @@ class Simulator:
                             try:
                                 passenger_source = gen_random_valid_point(top_left=new_top_left, bot_right=new_bot_right)
                                 if self.useFixedHotspots:
-                                    passenger_dest = random.choice(validFixedHotspots)
+                                    while True:
+                                        passenger_dest = random.choice(validFixedHotspots)
+                                        if not (new_bot_right[0] <= passenger_dest.y <= new_top_left[0] and new_top_left[1] <= passenger_dest.x <= new_bot_right[1]):
+                                            break
                                 else:
-                                    print(passenger_id)
-                                    passenger_dest = gen_random_valid_point_except(top_left=new_top_left, bot_right=new_bot_right)
+                                    passenger_dest = gen_random_valid_point()
                                 find_path_between_points_in_osrm(passenger_source.toTuple(), passenger_dest.toTuple())
                                 break
                             except Exception:

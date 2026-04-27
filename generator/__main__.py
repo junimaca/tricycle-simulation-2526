@@ -33,7 +33,7 @@ if __name__ == '__main__':
         totalPassengers=NUM_PASSENGERS,
         roadPassengerChance=1.0,
         roamingTrikeChance=1.0,
-        useFixedHotspots=False, # only use if you have setup hotspots in config
+        useFixedHotspots=True, # only use if you have setup hotspots in config
         useFixedTerminals=False, # only use if you have setup hotspots in config
         useSmartScheduler=True,
         trikeConfig=trike_config,
