@@ -61,7 +61,7 @@ def gen_random_valid_point_except(top_left, bot_right):
     while True:
         point_raw = gen_random_point()
         point = entities.Point(*util.find_nearest_point_in_osrm_path(point_raw.x, point_raw.y))
-        if not (bot_right[0] <= point.y <= top_left[y] and top_left[1] <= point.x <= bot_right[1]):
+        if not (bot_right[0] <= point.y <= top_left[0] and top_left[1] <= point.x <= bot_right[1]):
             break
     return point
 

@@ -381,6 +381,7 @@ class Simulator:
                                 if self.useFixedHotspots:
                                     passenger_dest = random.choice(validFixedHotspots)
                                 else:
+                                    print(passenger_id)
                                     passenger_dest = gen_random_valid_point_except(top_left=new_top_left, bot_right=new_bot_right)
                                 find_path_between_points_in_osrm(passenger_source.toTuple(), passenger_dest.toTuple())
                                 break

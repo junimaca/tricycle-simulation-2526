@@ -850,7 +850,7 @@ export class VisualManager {
         } else if (isDropoff) {
             markerColor = 'green';
         } else if (isPassengerDestination) {
-            markerColor = 'blue';
+            markerColor = 'gray';
         } else if (isIntersection) {
             markerColor = 'pink';
         } else {

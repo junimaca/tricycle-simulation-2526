@@ -801,6 +801,26 @@ export class EventProcessor {
                         "APPEAR",
                     );
                 }
+
+                const destcoords = pointsToRaw(passenger.dest);
+                if (!destcoords) return;
+                const destmarker = this.visualManager.createEventMarker(
+                    destcoords[0],
+                    destcoords[1],
+                    `[Frame ${timestamp}] ${passenger.id}: DESTINATION`,
+                    passenger.id
+                );
+
+                if (destmarker) {
+                    this.visualManager.addMarker('destination', passenger.id, marker);
+
+                    this.visualManager.logEvent(
+                        timestamp,
+                        passenger.id,
+                        "APPEAR",
+                    );
+                }
+
             }
         });
     }
