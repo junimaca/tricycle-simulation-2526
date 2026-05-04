@@ -353,7 +353,7 @@ class Simulator:
         # you will need to modify this
         passenger_id = 0
         passengers: list[entities.Passenger] = []
-        spawn_limit = 4000
+        spawn_limit = 6800
 
         rows = len(self.passengerSpawnRates)
         cols = len(self.passengerSpawnRates[0])

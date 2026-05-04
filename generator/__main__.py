@@ -4,13 +4,13 @@ import random
 from scenarios.real import Simulator, defaultTrikeConfig
 
 if __name__ == '__main__':
-    NUM_TRIKES = 1
+    NUM_TRIKES = 20
     NUM_TERMINALS = 1
     NUM_PASSENGERS = 20
-    MAX_TIME = 5_000
+    MAX_TIME = 7_200
     TEST_COUNT = 1
-    LAMBDAS = [[10000000, 10000000],
-               [10000000, 60]]
+    LAMBDAS = [[38, 75],
+               [75, 38]]
     
     # Simulation parameters
     S_ENQUEUE_RADIUS_METERS = 20  # Radius for enqueueing when tricycle is serving passengers
