@@ -220,6 +220,7 @@ class Simulator:
 
         if seed is not None:
             random.seed(seed)
+            np.random.seed(seed) 
         
         start_time = time.time()
 
@@ -347,17 +348,49 @@ class Simulator:
             map.addTricycle(trike)
             tricycles.append(trike)
         
-        # Generate passengers
+        # GENERATE PASSENGERS
         # By design, passengers are generated at the start of the simulation
         # If you want to implement passengers being generated throughout the simulation,
         # you will need to modify this
         passenger_id = 0
+        no_of_static_passengers = 20
         passengers: list[entities.Passenger] = []
         spawn_limit = 6800
 
         rows = len(self.passengerSpawnRates)
         cols = len(self.passengerSpawnRates[0])
 
+        # Static passenger generation
+        for _ in range(no_of_static_passengers):
+            # Generate road passenger on the road
+            # passenger_source = random.choice(hotspots)
+            while True:
+                try:
+                    passenger_source = gen_random_valid_point()
+                    if self.useFixedHotspots:
+                        passenger_dest = random.choice(validFixedHotspots)
+                    else:
+                        passenger_dest = gen_random_valid_point()
+                    find_path_between_points_in_osrm(passenger_source.toTuple(), passenger_dest.toTuple())
+                    break
+                except Exception:
+                    continue
+
+            passenger = entities.Passenger(
+                id=f'passenger_{passenger_id}',
+                src=passenger_source,
+                dest=passenger_dest,
+                createTime=0,
+                deathTime=-1
+            )
+
+            # Road passengers only go to map
+            map.addPassenger(passenger)
+
+            passengers.append(passenger)
+            passenger_id += 1
+
+        # Dynamic Poisson-based generation
         for i in range(rows):
             for j in range(cols):
                 current_spawn_time = 0
@@ -585,7 +618,7 @@ class Simulator:
                 if trike.status == TricycleStatus.ROAMING:
                     nearest_node = check_intersection(trike.curPoint())
                     if nearest_node != None and nearest_node != trike.latest_intersection:
-                        trike.turnIntersection(nearest_node, cur_time[0], forward_bias=False)
+                        trike.turnIntersection(nearest_node, cur_time[0], forward_bias=True)
                 #     else:
                 #         print("STATUS: ROAM ONLY")
                 #         print(f"Next destination: {trike.to_go[0]}")

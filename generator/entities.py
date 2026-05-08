@@ -487,7 +487,10 @@ class Tricycle(Actor):
 
             # print(f"Now, tricycle {self.id} attempting to move from {cur.toTuple()} to {nxt.toTuple()}", flush=True)
 
-        progress = min(distTravelled/distRequired, 1)
+        if distRequired == 0:
+            progress = 1
+        else: 
+            progress = min(distTravelled/distRequired, 1)
         new_point_raw = util.interpolate_points(cur.toTuple(), nxt.toTuple(), progress)
         # print(f"New point: {new_point_raw}")
         self.path.append(Point(*new_point_raw))
