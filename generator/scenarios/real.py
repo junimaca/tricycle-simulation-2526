@@ -70,7 +70,8 @@ defaultTrikeConfig = {
     "useMeters": True,  # Always use meters for consistency
     "maxCycles": 3,  # Maximum cycles before generating new roam path
     "s_enqueue_radius_meters": 50,  # Smaller radius for enqueueing when serving passengers
-    "enqueue_radius_meters": 200  # Default radius for enqueueing when not serving passengers
+    "enqueue_radius_meters": 200,  # Default radius for enqueueing when not serving passengers
+    "use_smart_intersection_algorithm": True
 }
 
 cache = None
@@ -94,7 +95,8 @@ class Simulator:
             trikeCapacity = None,
             isRealistic = False,
             enqueue_radius_meters = None,
-            passengerSpawnRates = [[80]]
+            passengerSpawnRates = [[80]],
+            useSmartIntersectionAlgorithm=True
         ):
         """
         Parameters:
@@ -124,6 +126,7 @@ class Simulator:
         - isRealistic: bool - always set this to True, unless you want to deal with great circle coordinate system
         - enqueue_radius_meters: float - the radius for enqueueing when not serving passengers
         - passengerSpawnRates: list[int][int] - 2-dimensional array of passenger spawn rates across the map
+        - useSmartIntersectionAlgorithm: bool - if True, use the intersection algorithm with road memory and forward bias
         """
         self.totalTrikes = totalTrikes
         self.totalTerminals = totalTerminals
@@ -140,6 +143,7 @@ class Simulator:
         self.useSmartScheduler = useSmartScheduler
         self.isRealistic = isRealistic
         self.passengerSpawnRates = passengerSpawnRates
+        self.useSmartIntersectionAlgorithm = useSmartIntersectionAlgorithm
 
         # ensure that there are non-negative count of entities
         if self.totalTerminals < 0:
@@ -183,6 +187,9 @@ class Simulator:
         
         if enqueue_radius_meters is not None:
             self.trikeConfig["enqueue_radius_meters"] = enqueue_radius_meters
+
+        if not useSmartIntersectionAlgorithm:
+            self.trikeConfig["use_smart_intersection_algorithm"] = False
     
     def run(
             self, 
@@ -215,7 +222,8 @@ class Simulator:
                 "maxCycles": self.trikeConfig["maxCycles"],
                 "s_enqueue_radius_meters": self.trikeConfig["s_enqueue_radius_meters"],
                 "enqueue_radius_meters": self.trikeConfig["enqueue_radius_meters"]
-            }
+            },
+            "smartIntersectionAlgorithm": self.useSmartIntersectionAlgorithm
         }
 
         if seed is not None:
@@ -294,7 +302,8 @@ class Simulator:
                     useMeters=self.trikeConfig["useMeters"],
                     maxCycles=self.trikeConfig["maxCycles"],
                     s_enqueue_radius_meters=self.trikeConfig["s_enqueue_radius_meters"],
-                    enqueue_radius_meters=self.trikeConfig["enqueue_radius_meters"]
+                    enqueue_radius_meters=self.trikeConfig["enqueue_radius_meters"],
+                    use_smart_intersection_algorithm=self.useSmartIntersectionAlgorithm
                 )
                 
                 if trike.goToNearestIntersection(0):  # Pass current_time=0
@@ -337,7 +346,8 @@ class Simulator:
                     useMeters=self.trikeConfig["useMeters"],
                     maxCycles=self.trikeConfig["maxCycles"],
                     s_enqueue_radius_meters=self.trikeConfig["s_enqueue_radius_meters"],
-                    enqueue_radius_meters=self.trikeConfig["enqueue_radius_meters"]
+                    enqueue_radius_meters=self.trikeConfig["enqueue_radius_meters"],
+                    use_smart_intersection_algorithm=self.useSmartIntersectionAlgorithm
                 )
 
                 if in_terminal:
@@ -618,7 +628,7 @@ class Simulator:
                 if trike.status == TricycleStatus.ROAMING:
                     nearest_node = check_intersection(trike.curPoint())
                     if nearest_node != None and nearest_node != trike.latest_intersection:
-                        trike.turnIntersection(nearest_node, cur_time[0], forward_bias=True)
+                        trike.turnIntersection(nearest_node, cur_time[0])
                 #     else:
                 #         print("STATUS: ROAM ONLY")
                 #         print(f"Next destination: {trike.to_go[0]}")

@@ -38,8 +38,8 @@ if __name__ == '__main__':
         useSmartScheduler=True,
         trikeConfig=trike_config,
         isRealistic=True, # always set to true
-        passengerSpawnRates = LAMBDAS
-
+        passengerSpawnRates = LAMBDAS,
+        useSmartIntersectionAlgorithm=True
     )
     for _ in range(TEST_COUNT):
         seed = random.randint(0, 10**9)

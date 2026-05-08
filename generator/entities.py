@@ -366,6 +366,7 @@ class Tricycle(Actor):
             maxCycles: int = None,
             s_enqueue_radius_meters: float = None,  # Smaller radius for enqueueing when tricycle is serving passengers
             enqueue_radius_meters: float = None,  # Radius for enqueueing when not serving passengers
+            use_smart_intersection_algorithm = True,
             **trikeConfig
     ):
         super().__init__(createTime, deathTime)
@@ -386,6 +387,7 @@ class Tricycle(Actor):
         self.maxCycles = maxCycles if maxCycles is not None else trikeConfig.get("maxCycles", 3) # To count how many cycles a tricycle can roam with no pickups before it is considered dead
         self.s_enqueue_radius_meters = s_enqueue_radius_meters if s_enqueue_radius_meters is not None else trikeConfig.get("s_enqueue_radius_meters", 50)  # Smaller radius for enqueueing when serving passengers
         self.enqueue_radius_meters = enqueue_radius_meters if enqueue_radius_meters is not None else trikeConfig.get("enqueue_radius_meters", 200)  # Radius for enqueueing when not serving passengers
+        self.use_smart_intersection_algorithm = use_smart_intersection_algorithm
 
         # initialize the tricycle
         self.isRoaming = isRoaming
@@ -667,14 +669,14 @@ class Tricycle(Actor):
             # print(f"Failed to add next cycle point", flush=True)
             pass
     
-    def goToNearestIntersection(self):
-        "If tricycle has dropped off a passenger and isn't doing anything, go to the nearest intersection"
-        node_x, node_y, _, _ = get_nearest_intersection(self.curPoint())
-        if self.updatePath(Point(node_x, node_y)):
-            self.updateStatus(TricycleStatus.ROAMING)
-            return True
-        else:
-            return False
+    # def goToNearestIntersection(self):
+    #     "If tricycle has dropped off a passenger and isn't doing anything, go to the nearest intersection"
+    #     node_x, node_y, _, _ = get_nearest_intersection(self.curPoint())
+    #     if self.updatePath(Point(node_x, node_y)):
+    #         self.updateStatus(TricycleStatus.ROAMING)
+    #         return True
+    #     else:
+    #         return False
             
     def newRoamPath(self, current_time: int):
         """
@@ -728,12 +730,12 @@ class Tricycle(Actor):
         else:
             return False
 
-    def turnIntersection(self, intersection, current_time, forward_bias=False):
+    def turnIntersection(self, intersection, current_time):
         adjacent_neighbors = get_adjacent_intersections(intersection)
         valid_options = list()
 
-        # WITH FORWARD BIAS
-        if forward_bias:
+        # SMART ALGORITHM: backtracking not allowed, road memory, and forward bias
+        if self.use_smart_intersection_algorithm:
             curr_x, curr_y = node_id_to_coords(intersection)
             current_bearing = 0.0
 
@@ -772,27 +774,18 @@ class Tricycle(Actor):
                     if angle_diff < 20 or angle_diff > 340:
                         valid_options.append(neighbor)  
 
-        # WITHOUT FORWARD BIAS
+       # BASIC ALGORITHM: only backtracking not allowed
         else:
             for neighbor in adjacent_neighbors:
                 if self.latest_intersection == neighbor:
                     continue
 
-                # Get edges and check if we have gone through there before to avoid looping back
-                neighbor_edge = getKeyEdge(neighbor, intersection)
-
-                if neighbor_edge:
-                    osm_id = neighbor_edge[0]['osmid']
-
-                    if osm_id in self.visited_edges:
-                        continue
-
-                    valid_options.append(neighbor)
+                valid_options.append(neighbor)
 
         # print(f"STATUS: ROAM, GO TO INTERSECTION")
         # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
 
-        # If no valid options exist, choose one neighbor at randomm
+        # If no valid options exist, choose one neighbor at random
         if len(valid_options) == 0:
             next_intersection = random.choice(adjacent_neighbors)
         else:
