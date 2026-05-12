@@ -4,7 +4,7 @@ import random
 from scenarios.real import Simulator, defaultTrikeConfig
 
 if __name__ == '__main__':
-    NUM_TRIKES = 20
+    NUM_TRIKES = 10
     NUM_TERMINALS = 1
     NUM_PASSENGERS = 20
     MAX_TIME = 7_200
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         trikeConfig=trike_config,
         isRealistic=True, # always set to true
         passengerSpawnRates = LAMBDAS,
-        useSmartIntersectionAlgorithm=True
+        useSmartIntersectionAlgorithm=False
     )
     for _ in range(TEST_COUNT):
         seed = random.randint(0, 10**9)
