@@ -94,6 +94,8 @@ def run_simulation(num_trikes, lambdas, algos=False,  use_smart_scheduler=True, 
             results['execution_time_seconds'] = end_time - start_time
             results['metadata'] = {
                 'num_trikes': num_trikes,
+                'lambdas': lambdas,
+                'use_smart_intersection_algorithm': algos,
                 'use_smart_scheduler': use_smart_scheduler,
                 'trike_capacity': trike_capacity,
                 'seed': seed,
@@ -156,7 +158,6 @@ def main():
     # Initialize progress counters
     completed_simulations = 0
 
-    # Group A: Number of tricycles analysis
     # Test parameters for each group
 
     tricycle_counts = [5, 10, 15, 20]

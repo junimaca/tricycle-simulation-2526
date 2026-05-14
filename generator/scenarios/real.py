@@ -478,7 +478,10 @@ class Simulator:
         # Print metadata. Update to reflect final passenger count
         self.totalPassengers = len(passengers)
         run_metadata["totalPassengers"] = len(passengers)
-        self.prefix = '-'.join([str(x) for x in [self.totalTrikes, self.totalTerminals, self.totalPassengers]])
+        if self.useSmartIntersectionAlgorithm:
+            self.prefix = '-'.join([str(x) for x in [self.totalTrikes, len(self.passengerSpawnRates) * len(self.passengerSpawnRates[0]), self.totalPassengers, 't']])
+        else:
+            self.prefix = '-'.join([str(x) for x in [self.totalTrikes, len(self.passengerSpawnRates) * len(self.passengerSpawnRates[0]), self.totalPassengers, 'f']])
         run_id = f'{self.prefix}-{generate_random_filename()}'
         run_metadata["id"] = run_id
 
