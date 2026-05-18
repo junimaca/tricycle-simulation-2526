@@ -10,7 +10,7 @@ df = pd.read_csv('simulations.csv')
 def file_name_maker(str):
     return str.lower().replace(' ', "_")
 
-def completion_rate_graphs():
+def main_graphs():
     global df
 
     for ind_var in ['Number of Tricycles', 'Number of Sectors', 'Intersection Algorithm']:
@@ -18,12 +18,13 @@ def completion_rate_graphs():
             sns.boxplot(
                 data=df,
                 x=ind_var,
-                y="Completion Rate",
+                y=dep_var,
             )
 
-            plt.title(f"{ind_var} vs Completion Rate")
+            plt.title(f"{ind_var} vs {dep_var}")
             plt.savefig(f"figures/{file_name_maker(ind_var)}_vs_{file_name_maker(dep_var)}.png")
-            plt.show()
+            plt.close()
+            # plt.show()
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
     # plt.show()
     # plt.savefig("figures/wait_time.png")
 
-    completion_rate_graphs()
+    main_graphs()
 
 if __name__ == '__main__':
     main() 
