@@ -14,7 +14,7 @@ def main_graphs():
     global df
 
     for ind_var in ['Number of Tricycles', 'Number of Sectors', 'Intersection Algorithm']:
-        for dep_var in ['Completion Rate', 'Average Wait Time', 'Efficiency Percentage']:
+        for dep_var in ['Completion Rate', 'Average Wait Time', 'Total Distance', 'Productive Distance', 'Efficiency Percentage']:
             sns.boxplot(
                 data=df,
                 x=ind_var,
