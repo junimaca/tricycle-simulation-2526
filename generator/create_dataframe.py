@@ -18,7 +18,7 @@ class SimulationRun:
             self.metadata = metadata
             self.numTrikes = metadata['totalTrikes']
             self.numPassengers = metadata['totalPassengers']
-            self.numSectors = metadata["id"].split("-")[1]
+            self.numSectors = metadata['totalSectors']
             self.useSmartIntersectionAlgorithm = metadata['smartIntersectionAlgorithm']
             self.useSmartScheduler = metadata['smartScheduling']
             self.trikeCapacity = metadata['trikeConfig']['capacity']
@@ -113,7 +113,7 @@ def main():
 
     print(f"\nTotal simulations loaded: {len(simulations)}")
     
-    main_dataframe.to_csv('simulations.csv')
+    main_dataframe.to_csv('new_sims.csv')
 
 if __name__ == '__main__':
     main() 

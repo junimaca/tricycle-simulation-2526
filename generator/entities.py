@@ -162,7 +162,7 @@ class Map:
                 nearby.append(passenger)
         return nearby
     
-    def isAtLocation(self, point1: Point, point2: Point, thresholdMeters: float = 2.0) -> bool:
+    def isAtLocation(self, point1: Point, point2: Point, thresholdMeters: float = 20.0) -> bool:
         """
         Checks if two points are within the specified threshold distance of each other.
         Uses haversine distance for accurate distance calculation.
@@ -397,7 +397,7 @@ class Tricycle(Actor):
         self.enqueuedPassenger = None  # Track single enqueued passenger
         self.status = TricycleStatus.ROAMING if isRoaming else TricycleStatus.IDLE
         self.latest_intersection = None # stores NODE ID
-        self.visited_edges = [] #edges that the tricycle has traversed so that it doesn't loop back
+        self.visited_edges = set() # edges that the tricycle has traversed so that it doesn't loop back
 
         # initialize metrics
         self.totalDistance = 0
@@ -752,27 +752,24 @@ class Tricycle(Actor):
                     continue
                 
                 # Get edges and check if we have gone through there before to avoid looping back
-                neighbor_edge = getKeyEdge(neighbor, intersection)
+                neighbor_edge = {intersection, neighbor}
 
-                if neighbor_edge:
-                    osm_id = neighbor_edge[0]['osmid']
+                if neighbor_edge in self.visited_edges:
+                    continue
 
-                    if osm_id in self.visited_edges:
-                        continue
+                # Compute bearing from 
+                neighbor_x, neighbor_y = node_id_to_coords(neighbor)
+                bearing_to_neighbor = ox.bearing.calculate_bearing(curr_y, curr_x, neighbor_y, neighbor_x)
 
-                    # Compute bearing from 
-                    neighbor_x, neighbor_y = node_id_to_coords(neighbor)
-                    bearing_to_neighbor = ox.bearing.calculate_bearing(curr_y, curr_x, neighbor_y, neighbor_x)
+                # Compare two bearings; if broadly similar then it is considered forward and is added twice to increase chances of being randomly chosen
+                angle_diff = abs((current_bearing - bearing_to_neighbor + 180) % 360 - 180)
 
-                    # Compare two bearings; if broadly similar then it is considered forward and is added twice to increase chances of being randomly chosen
-                    angle_diff = abs(current_bearing - bearing_to_neighbor)
+                if angle_diff > 160:
+                    continue # Do not add
 
-                    if angle_diff > 160 and angle_diff < 200:
-                        continue
-
-                    valid_options.append(neighbor)
-                    if angle_diff < 20 or angle_diff > 340:
-                        valid_options.append(neighbor)  
+                valid_options.append(neighbor)
+                if angle_diff < 20:
+                    valid_options.append(neighbor) # Add again
 
        # BASIC ALGORITHM: only backtracking not allowed
         else:
@@ -787,22 +784,19 @@ class Tricycle(Actor):
 
         # If no valid options exist, choose one neighbor at random
         if len(valid_options) == 0:
-            next_intersection = random.choice(adjacent_neighbors)
-        else:
-            next_intersection = random.choice(valid_options)
+            try:
+                next_intersection = random.choice(adjacent_neighbors)
+            except:
+                raise Exception("No neighbors found")
+        else:      
+                next_intersection = random.choice(valid_options)
 
         self.latest_intersection = intersection
         p_x, p_y = node_id_to_coords(next_intersection)
 
-        #Record visited edge after decision
-        chosen_edge = getKeyEdge(intersection, next_intersection)
-
-        if chosen_edge:
-            for edge_id, attribs in chosen_edge.items():
-                osm_id = attribs.get('osmid')
-
-                if osm_id not in self.visited_edges:
-                    self.visited_edges.append(osm_id)
+        # Record visited edge after decision
+        chosen_edge = frozenset((intersection, next_intersection))
+        self.visited_edges.add(chosen_edge)
 
         # print(f"STATUS: ROAM, GO TO INTERSECTION")
         # print(f"{intersection}'s valid adjacent intersections {adjacent_neighbors}")
@@ -1013,7 +1007,7 @@ class Tricycle(Actor):
 
                 # Add pickup point to the front of to_go if not already there
                 if not any(point.x == p.src.x and point.y == p.src.y for point in self.to_go):
-                    if not self.updatePath(p.src, priority='front'):
+                    if not self.updatePath(p.src, priority='replace'):
                         print(f"Failed to add pickup point for {p.id}", flush=True)
                         # If we failed to add the pickup point, reset the passenger
                         p.onReset(current_time, [p.src.x, p.src.y])
@@ -1119,7 +1113,7 @@ class Tricycle(Actor):
 
                 if self.loadPassenger(p, current_time):
                     loaded.append(p)
-                    self.map.removePassenger(p)
+                    
                     # print(f"Loaded {p.id} into {self.id} at exact spawn location", flush=True)
                     
                     # Add a small wait after loading to ensure stability
@@ -1138,6 +1132,8 @@ class Tricycle(Actor):
                     except NoMorePassengers:
                         # print(f"No more passengers to schedule for {self.id}", flush=True)
                         pass
+
+                    self.map.removePassenger(p)
                     self.updateStatus(TricycleStatus.SERVING)
                 else:
                     # If we can't load the passenger (e.g., capacity reached),
@@ -1190,6 +1186,7 @@ class Tricycle(Actor):
                 p.onDropoff(current_time, [cur.x, cur.y])
                 dropped.append(p)
                 # print(f"----Dropped {p.id} at distance {distance:.2f}m", flush=True)
+                self.visited_edges = set() # Flush road memory
             else:
                 # print(f"Tricycle {self.id} is too far ({distance:.2f}m) from {p.id}'s destination to drop off", flush=True)
                 pass

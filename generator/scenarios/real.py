@@ -814,7 +814,8 @@ class Simulator:
         run_metadata["endTime"] = cur_time
         run_metadata["elapsedTime"] = elapsed_time
         run_metadata["lastActivityTime"] = last_active[0]
-
+        run_metadata["totalSectors"] = len(self.passengerSpawnRates) * len(self.passengerSpawnRates[0])
+        
         # save the metadata
         with open(f"data/real/{run_id}/metadata.json", "w+") as f:
             json.dump(run_metadata, f)

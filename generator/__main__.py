@@ -4,13 +4,13 @@ import random
 from scenarios.real import Simulator, defaultTrikeConfig
 
 if __name__ == '__main__':
-    NUM_TRIKES = 10
+    NUM_TRIKES = 3
     NUM_TERMINALS = 1
     NUM_PASSENGERS = 20
     MAX_TIME = 7_200
     TEST_COUNT = 1
-    LAMBDAS = [[38, 75],
-               [75, 38]]
+    LAMBDAS = [[400, 200],
+               [200, 400]]
     
     # Simulation parameters
     S_ENQUEUE_RADIUS_METERS = 20  # Radius for enqueueing when tricycle is serving passengers
@@ -39,8 +39,8 @@ if __name__ == '__main__':
         trikeConfig=trike_config,
         isRealistic=True, # always set to true
         passengerSpawnRates = LAMBDAS,
-        useSmartIntersectionAlgorithm=False
+        useSmartIntersectionAlgorithm=True
     )
     for _ in range(TEST_COUNT):
         seed = random.randint(0, 10**9)
-        simulator.run(maxTime=MAX_TIME, fixedHotspots=config.MAGIN_HOTSPOTS, fixedTerminals=config.MAGIN_TERMINALS, seed=675270576)
+        simulator.run(maxTime=MAX_TIME, fixedHotspots=config.MAGIN_HOTSPOTS, fixedTerminals=config.MAGIN_TERMINALS, seed=seed)
