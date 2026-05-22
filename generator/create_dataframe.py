@@ -113,7 +113,7 @@ def main():
 
     print(f"\nTotal simulations loaded: {len(simulations)}")
     
-    main_dataframe.to_csv('new_sims.csv')
+    main_dataframe.to_csv('csv/new_sims.csv')
 
 if __name__ == '__main__':
     main() 

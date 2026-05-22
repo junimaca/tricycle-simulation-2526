@@ -16,6 +16,7 @@ import entities
 import algos
 import osmnx as ox
 import numpy as np
+from math import floor
 
 from entities import PassengerStatus, TricycleStatus
 from util import NoRoute, get_euclidean_distance, find_path_between_points_in_osrm
@@ -406,10 +407,10 @@ class Simulator:
                 current_spawn_time = 0
                 new_top_left  = [config.TOP_LEFT_Y - (i * config.LEN_Y / rows),       config.TOP_LEFT_X + (j * config.LEN_X / cols)]
                 new_bot_right = [config.TOP_LEFT_Y - ((i + 1) * config.LEN_Y / rows), config.TOP_LEFT_X + ((j + 1) * config.LEN_X / cols)]
-                current_rate = self.passengerSpawnRates[i][j]
+                current_rate = 1 / self.passengerSpawnRates[i][j]
 
                 while True:
-                    interval = np.random.poisson(lam=current_rate)
+                    interval = floor(random.expovariate(current_rate))
                     current_spawn_time = current_spawn_time + interval
 
                     if current_spawn_time > spawn_limit:

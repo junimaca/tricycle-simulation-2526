@@ -5,7 +5,14 @@ import seaborn as sns
 import pandas as pd
 from datetime import datetime
 
-df = pd.read_csv('simulations.csv')
+df = None
+
+def create_unified_dataframe():
+    global df
+
+    csv_files = [os.path.join("csv", f) for f in os.listdir("csv") if f.endswith('.csv')]
+    df = pd.concat(map(pd.read_csv, csv_files))
+
 
 def file_name_maker(str):
     return str.lower().replace(' ', "_")
@@ -30,17 +37,7 @@ def main_graphs():
 def main():
     global df
 
-    # sns.boxplot(
-    #     data=df,
-    #     x="Number of Tricycles",
-    #     y="Average Wait Time",
-    #     hue='Intersection Algorithm'
-    # )
-
-    # plt.title("Average Wait Time vs Number of Tricycles")
-    # plt.show()
-    # plt.savefig("figures/wait_time.png")
-
+    create_unified_dataframe()
     main_graphs()
 
 if __name__ == '__main__':
