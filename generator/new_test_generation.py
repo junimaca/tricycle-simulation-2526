@@ -14,7 +14,7 @@ from scenarios.real import Simulator
 import config
 
 # Global configuration
-NUM_SEEDS = 10  # Number of seeds
+NUM_SEEDS = 12  # Number of seeds
 
 def save_progress(all_results, data_dir):
     """Save current progress to a temporary file"""
@@ -162,8 +162,8 @@ def main():
 
     tricycle_counts = [5, 10, 15, 20]
     lambdas = [
-                [[38, 75], [75, 38]],
-                [[58, 116, 58], [116, 58, 116]],
+                [[37.5, 75], [75, 37.5]],
+                [[56.25, 112.5, 58], [112.5, 56.25, 112.5]],
                 [[75, 150, 75, 150], [150, 75, 150, 75]],
               ]
     algorithms = [True, False]

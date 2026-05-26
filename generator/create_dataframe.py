@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from datetime import datetime
+import time
 
 main_dataframe = None
 
@@ -16,6 +17,7 @@ class SimulationRun:
         with open(os.path.join(run_dir, 'metadata.json'), 'r') as f:
             metadata = json.load(f)
             self.metadata = metadata
+            self.seed = metadata["seed"]
             self.numTrikes = metadata['totalTrikes']
             self.numPassengers = metadata['totalPassengers']
             self.numSectors = metadata['totalSectors']
@@ -80,12 +82,20 @@ def main():
     # Load simulation results
     print("\nLoading simulation results...")
     simulations = []
+
+    cutoff_time = 1779818400
+
     
     # Look for simulation directories
     data_dir = os.path.join('data', 'real')
     for run_dir in os.listdir(data_dir):
         run_path = os.path.join(data_dir, run_dir)
         if os.path.isdir(run_path) and not run_dir.startswith('.'):
+            # modified_time = os.path.getmtime(run_path)
+
+            # if modified_time < cutoff_time:
+            #     continue
+
             try:
                 simulation = SimulationRun(run_path)
                 simulations.append(simulation)
@@ -93,6 +103,7 @@ def main():
                 print(f"Loaded simulation with {simulation.numTrikes} tricycles, {simulation.numPassengers} passengers, {simulation.numSectors} sectors, uses {algo_name} intersection algorithm")
             
                 new_row = pd.DataFrame({
+                    'Seed': [simulation.seed],
                     'Number of Tricycles': [simulation.numTrikes],
                     'Number of Sectors': [simulation.numSectors],
                     'Intersection Algorithm': [algo_name],
@@ -113,7 +124,7 @@ def main():
 
     print(f"\nTotal simulations loaded: {len(simulations)}")
     
-    main_dataframe.to_csv('csv/new_sims.csv')
+    main_dataframe.to_csv('csv/newer_sims.csv')
 
 if __name__ == '__main__':
     main() 
